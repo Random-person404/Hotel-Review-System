@@ -31,6 +31,7 @@ protected:
 public:
     // Default Constructor
     Traveler();
+    // Destructor
     ~Traveler(){}
 
     // Parameterized Constructor
