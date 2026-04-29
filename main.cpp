@@ -7,7 +7,6 @@
 #include "Traveler.h"
 #include "Review.h"
 
-
 using namespace std;
 
 // Constants
