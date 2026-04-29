@@ -16,7 +16,9 @@ class Person
     public: 
         Person();  //default constructor
         Person(string id, string name, string country, string state, string email); //overloading constructor
-        ~Person();  //destructor
+        //destructor
+        ~Person(){}
+        
 
     // Setters
     void setUserID(string id);

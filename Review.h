@@ -20,6 +20,7 @@ private:
 public:
     // Default Constructor - Required for fixed-size arrays
     Review();
+    ~Review(){}
 
     // Parameterized Constructor
     Review(string hName, int r, string text, string rID);

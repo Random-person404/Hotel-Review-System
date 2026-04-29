@@ -3,24 +3,33 @@
 
 #include "Traveler.h"
 #include <string>
+#include "Review.h"
 
 using namespace std;
 
-/**
- * Class: MemberTraveler
- * Role: Represents a registered user with a loyalty profile.
- * Mandatory OOP Specification: Inheritance (Parent: Traveler, Child: MemberTraveler).
- * Demonstrates: Adding specialized data (membershipLevel and loyaltyPoints).
- */
-class MemberTraveler : public Traveler {
-private:
-    // Specialized Data (New attributes not found in the base class)
-    string membershipLevel;
-    int loyaltyPoints;
+// Constants for fixed-size arrays as per rubric constraints
+const int MAX_REVIEWS_PER_USER = 50;
+
+//Class: Traveler
+//Role: Represents a general user/traveler in the system.
+//Mandatory OOP Specification: Composition (Has-A relationship with Review).
+
+class Traveler {
+protected:
+    // Basic traveler information
+    string userID;
+    string userName;
+    string country;
+    string state;
+    string email;
+
+    // Composition: An array of Review objects owned by this Traveler
+    Review travelerReviews[MAX_REVIEWS_PER_USER];
+    int reviewCount;
 
 public:
     // Default Constructor
-    MemberTraveler();
+    Traveler();
 
     // Parameterized Constructor
     // Note: Passes common attributes up to the Traveler base constructor
