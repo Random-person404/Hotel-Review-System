@@ -31,16 +31,22 @@ public:
     // Setters for specialized data
     void setMemberDetails(string level, int pts);
 
+    //Add Reviews
+    void addReview(const string& review);
+
     //Logic Location: Processing logic inside member functions.
     //Updates membership level automatically based on point thresholds.
     void updateMembership();
 
     //Logic Location: Adds points and updates membership.
-    void earnPoints(int pts);
+    void addPoints(int pts);
 
     //Overriding displayProfile to show the specialized data 
     //alongside inherited attributes.
     void displayProfile() const;
+
+    //Display all reviews written by the traveler.
+    void displayAllReviews() const;
 
     //Mandatory OOP Specification: Friend Function
     //Allows an external report utility to access private members 
