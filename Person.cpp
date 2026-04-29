@@ -84,5 +84,4 @@ void displayBasicInfo() const{
         cout << "Country: " << country << endl; // Display the country
         cout << "State: " << state << endl; // Display the state
         cout << "Email: " << email << endl; // Display the email
-        cout << "========================================\n";
 }

@@ -3,7 +3,9 @@
 #include <fstream> // Include the fstream library for file input and output
 #include <iomanip> // Include the iomanip library for input and output manipulation
 #include <string> // Include the string library for string operations
-
+#include "Person.h"
+#include "Traveler.h"
+#include "Review.h"
 using namespace std;
 
 // Constants
