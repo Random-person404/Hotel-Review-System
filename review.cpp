@@ -4,6 +4,10 @@
 
 using namespace std;
 
+const int BASE_POINTS = 100;  // Base points for each review
+const int BONUS_POINTS = 10;  // Bonus points for each review
+const int BONUS_WORD_THRESHOLD = 50;  // Threshold for bonus points
+
 // Default Constructor
 // Required for initializing fixed-size arrays within the User class
 Review::Review() {

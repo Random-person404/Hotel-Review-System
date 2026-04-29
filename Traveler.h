@@ -1,20 +1,19 @@
 #ifndef TRAVELER_H
 #define TRAVELER_H
 
+#include "Review.h"
 #include "Person.h"
 #include <string>
 
 using namespace std;
 
-//Class: MemberTraveler
-//Role: Represents a registered user with a loyalty profile.
-//Mandatory OOP Specification: Inheritance (Parent: Traveler, Child: MemberTraveler).
-//Demonstrates: Adding specialized data (membershipLevel and loyaltyPoints).
 class Traveler : public Person {
 private:
     // Specialized Data (New attributes not found in the base class)
     string membershipLevel;
     int loyaltyPoints;
+    int reviewCount;
+    Review travelerReviews[500]; 
 
 public:
     // Default Constructor
@@ -27,12 +26,13 @@ public:
     // Getters for specialized data
     string getMembershipLevel() const;
     int getLoyaltyPoints() const;
+    int getReviewCount() const;
 
     // Setters for specialized data
-    void setMemberDetails(string level, int pts);
+    void setMemberDetails(string level, int pts, int rc);
 
     //Add Reviews
-    void addReview(const string& review);
+    void addReview();
 
     //Logic Location: Processing logic inside member functions.
     //Updates membership level automatically based on point thresholds.
@@ -51,7 +51,6 @@ public:
     //Mandatory OOP Specification: Friend Function
     //Allows an external report utility to access private members 
     //like loyaltyPoints without breaking encapsulation.
-     * 
     friend void generateReportSummary();
 };
 

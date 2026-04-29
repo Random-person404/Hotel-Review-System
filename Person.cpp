@@ -1,7 +1,8 @@
 //Implementation file for the Person class
  #include "Person.h"
  #include <iostream>
- include namespace std;
+ #include <string>
+ using namespace std;
 
  //==========Contructors===========
  //Default constructor
@@ -75,7 +76,7 @@ string Person::getEmail() const{
 }
 
 //=========display function===========
-void displayBasicInfo() const{
+void Person::displayBasicInfo() const{
         cout << "\n========================================\n";
         cout << "Traveller INFORMATION\n"; // Display the user information
         cout << "========================================\n";

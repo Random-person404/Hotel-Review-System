@@ -71,13 +71,7 @@ string findUserIDCaseInsensitive(const string& input, string userIDList[], int u
 //=================Main function=================
 int main() { 
     // Parallel arrays for users and reviews
-    string userID[MAX_USERS];
-    string userName[MAX_USERS];
-    string country[MAX_USERS];
-    string state[MAX_USERS];
-    string email[MAX_USERS];
-    string membership[MAX_USERS];
-    int points[MAX_USERS];
+    Traveler travelers[MAX_USERS]; // Array of Traveler objects
     int reviewCountsPerUser[MAX_USERS] = {0}; // Track review count per user
     int userCount = 0;  // Count of users
 
