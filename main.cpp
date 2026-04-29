@@ -6,7 +6,6 @@
 #include "Person.h"
 #include "Traveler.h"
 #include "Review.h"
-
 using namespace std;
 
 // Constants
@@ -17,28 +16,14 @@ const int BASE_POINTS = 100;  // Base points for each review
 const int BONUS_POINTS = 10;  // Bonus points for each review
 const int BONUS_WORD_THRESHOLD = 50;  // Threshold for bonus points
 
-// Function prototypes
-void loadUsers(const string& filename, string userID[], string userName[],  // Load users from a file
+//===============================Function prototypes=====================
+void loadTraveler(const string& filename, string userID[], string userName[],  // Load users from a file
                string country[], string state[], string email[],
                string membership[], int points[], int& userCount);
 void loadReviews(const string& filename, string userID[], int rating[],  // Load reviews from a file
                  string reviewText[], string hotelName[], int& reviewCount);
 void displayMenu(); // Display the menu
 int getChoice(); // Get the choice from the user
-void displayReviewsByUser(string userID[], string reviewText[],  // Display reviews by user
-                          string hotelName[], int rating[],
-                          int reviewCount, string targetUserID);
-void displayReviewsByHotel(string userID[], string reviewText[],  // Display reviews by hotel
-                           string hotelName[], int rating[],
-                           string userName[], int reviewCount,
-                           string targetHotel);
-void displayUserInfo(string userID[], string userName[], string country[],  // Display user information
-                     string state[], string email[], string membership[],
-                     int points[], int userCount, string targetUserID);
-void displayPositiveReviewsByHotel(string userID[], string reviewText[],  // Display positive reviews by hotel
-                                   string hotelName[], int rating[],
-                                   string userName[], int reviewCount,
-                                   string targetHotel);
 void displaySummary(string userID[], int reviewCount, int points[],  // Display summary of activities
                     int userCount);
 void displayUsersByCategory(string userID[], string userName[],  // Display users by category
@@ -52,20 +37,6 @@ void displayTop3Users(string userID[], string userName[],  // Display top 3 user
 void displayHotelRatingSummary(string hotelName[], int rating[],  // Display hotel rating summary
                                 int reviewCount);
 int countWords(const string& text); // Count the words in a string
-int calculateReviewPoints(const string& reviewText); // Calculate the points for a review
-void updateMembershipCategories(string userID[], string userName[],  // Update the membership categories
-                                 int points[], string membership[],
-                                 int userCount);
-void addPointsForNewReview(string userID[], string userName[], int points[],  // Add points for a new review
-                           string membership[], string newUserID,
-                           string newReviewText, int userCount);
-string getMembershipCategory(int points); // Get the membership category for a user
-void addNewReview(string reviewUserID[], int rating[], string reviewText[],  // Add a new review
-                  string hotelName[], int& reviewCount,
-                  string userID[], int userCount, string& newUserID,
-                  string& newReviewText);
-bool validateUserID(const string& userID, string userIDList[], int userCount); // Validate the user ID
-bool validateRating(int rating); // Validate the rating
 void displayAllHotels(string hotelName[], int reviewCount); // Display all hotels
 void displayAllUsers(string userID[], string userName[], int userCount); // Display all users
 void saveUsers(const string& filename, string userID[], string userName[],  // Save the users to a file
@@ -83,12 +54,21 @@ void searchReviewsByKeyword(string reviewText[], string hotelName[], // Search r
                             string reviewUserID[], int rating[],
                             string userID[], string userName[],
                             int reviewCount, int userCount, string keyword);
-//Functtion prototypes for better readability and organization
+
+                            //-----------validation----------------------------
+bool validateUserID(const string& userID, string userIDList[], int userCount); // Validate the user ID
+bool validateRating(int rating); // Validate the rating
+//---------------------------------------------------
+
+//------------for better readability-------------------
 string toUpper(const string& str); // Convert a string to uppercase
 bool caseInsensitiveCompare(const string& str1, const string& str2); // Compare two strings case insensitively
 string findUserIDCaseInsensitive(const string& input, string userIDList[], int userCount); // Find a user ID case insensitively
+//-----------------------------------------------------
+//===================================================================
 
-int main() { // Main function
+//==============Main function=============
+int main() { 
     // Parallel arrays for users and reviews
     string userID[MAX_USERS];
     string userName[MAX_USERS];
