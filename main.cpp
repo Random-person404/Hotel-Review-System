@@ -6,6 +6,7 @@
 #include "Person.h"
 #include "Traveler.h"
 #include "Review.h"
+
 using namespace std;
 
 // Constants
@@ -55,7 +56,7 @@ void searchReviewsByKeyword(string reviewText[], string hotelName[], // Search r
                             string userID[], string userName[],
                             int reviewCount, int userCount, string keyword);
 
-                            //-----------validation----------------------------
+//-----------validation----------------------------
 bool validateUserID(const string& userID, string userIDList[], int userCount); // Validate the user ID
 bool validateRating(int rating); // Validate the rating
 //---------------------------------------------------
@@ -67,7 +68,7 @@ string findUserIDCaseInsensitive(const string& input, string userIDList[], int u
 //-----------------------------------------------------
 //===================================================================
 
-//==============Main function=============
+//=================Main function=================
 int main() { 
     // Parallel arrays for users and reviews
     string userID[MAX_USERS];
