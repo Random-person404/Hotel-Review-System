@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include "Review.h"
+#include "Person.h"
 
 using namespace std;
 
@@ -14,7 +15,7 @@ const int MAX_REVIEWS_PER_USER = 50;
 //Role: Represents a general user/traveler in the system.
 //Mandatory OOP Specification: Composition (Has-A relationship with Review).
 
-class Traveler {
+class Traveler:public Person{
 protected:
     // Basic traveler information
     string userID;
