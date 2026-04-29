@@ -1,10 +1,9 @@
-#ifndef TRAVELER_H
-#define TRAVELER_H
+#ifndef MEMBER_TRAVELER_H
+#define MEMBER_TRAVELER_H
 
-#include <iostream>
+#include "Traveler.h"
 #include <string>
 #include "Review.h"
-#include "Person.h"
 
 using namespace std;
 
@@ -15,7 +14,7 @@ const int MAX_REVIEWS_PER_USER = 50;
 //Role: Represents a general user/traveler in the system.
 //Mandatory OOP Specification: Composition (Has-A relationship with Review).
 
-class Traveler:public Person{
+class Traveler {
 protected:
     // Basic traveler information
     string userID;
@@ -35,28 +34,39 @@ public:
     ~Traveler(){}
 
     // Parameterized Constructor
-    Traveler(string id, string name, string cty, string st, string mail);
+    // Note: Passes common attributes up to the Traveler base constructor
+    MemberTraveler(string id, string name, string cty, string st, string mail, string level, int pts);
 
-    // Getters
-    string getUserID() const;
-    string getUserName() const;
-    string getCountry() const;
-    string getState() const;
-    string getEmail() const;
-    int getReviewCount() const;
+    // Getters for specialized data
+    string getMembershipLevel() const;
+    int getLoyaltyPoints() const;
 
-    // Setters
-    void setTravelerInfo(string id, string name, string cty, string st, string mail);
+    // Setters for specialized data
+    void setMemberDetails(string level, int pts);
 
-    //Logic Location: Processing logic inside member functions.
-    //Adds a review to the traveler's history.
-    bool addReview(string hotel, int rate, string text);
+    /**
+     * Logic Location: Processing logic inside member functions.
+     * Updates membership level automatically based on point thresholds.
+     */
+    void updateMembership();
 
-    // Displays the traveler's basic profile
+    /**
+     * Logic Location: Adds points and updates membership.
+     */
+    void earnPoints(int pts);
+
+    /**
+     * Overriding displayProfile to show the specialized data 
+     * alongside inherited attributes.
+     */
     void displayProfile() const;
 
-    // Displays all reviews authored by this traveler
-    void displayAllReviews() const;
+    /**
+     * Mandatory OOP Specification: Friend Function
+     * Allows an external report utility to access private members 
+     * like loyaltyPoints without breaking encapsulation.
+     */
+    friend void generateReportSummary();
 };
 
 #endif
