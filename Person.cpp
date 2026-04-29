@@ -77,7 +77,7 @@ string Person::getEmail() const{
 //=========display function===========
 void displayBasicInfo() const{
         cout << "\n========================================\n";
-        cout << "USER INFORMATION\n"; // Display the user information
+        cout << "Traveller INFORMATION\n"; // Display the user information
         cout << "========================================\n";
         cout << "User ID: " << userID << endl; // Display the user ID
         cout << "Name: " << userName << endl; // Display the name

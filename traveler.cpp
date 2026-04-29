@@ -76,15 +76,10 @@ void Traveler::updateMembership() {
 
 // Displays the traveler's basic profile information
 void Traveler::displayProfile() const {
-    cout << "========================================" << endl;
-    cout << "TRAVELER PROFILE: " << userID << endl;
-    cout << "========================================" << endl;
-    cout << "Name:    " << userName << endl;
-    cout << "Country: " << country << endl;
-    cout << "State:   " << state << endl;
-    cout << "Email:   " << email << endl;
+    Person::displayBasicInfo();
     cout << "Total Reviews: " << reviewCount << endl;
-    cout << "----------------------------------------" << endl;
+    cout << "Membership: " << membershipLevel << endl;
+    cout << "Loyalty point: " << loyaltyPoints << endl;
 }
 
 // Iterates through the composed array and calls display logic for each review
