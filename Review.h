@@ -46,6 +46,13 @@ public:
 // Display function to summarize the review data
     void displayReview() const;
 
+// Calculate number of words added in review
+    int countWords(const string& text);
+
+// Calculate calculate for a review
+    int calculateReviewPoints(const string& reviewText); 
+
+
 //Mandatory OOP Specification: Friend Function
 //Allows the external report generator to access private members of Review.
     friend void generateAnalyticsReport(); 

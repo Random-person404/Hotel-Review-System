@@ -47,6 +47,32 @@ bool Review::operator<(const Review& other) const {
     return this->rating < other.rating;
 }
 
+
+// Calculate number of words added in review
+int countWords(const string& text) {
+    int wordCount = 0; // Initialize the word count to 0
+    bool inWord = false;
+    for (size_t i = 0; i < text.length(); i++) {
+        if (text[i] == ' ' || text[i] == '\t') {
+            inWord = false; // Set the in word flag to false
+        } else if (!inWord) {
+            inWord = true; // Set the in word flag to true
+            wordCount++;
+        }
+    }
+    return wordCount;
+}
+
+// Calculate calculate for a review
+int calculateReviewPoints(const string& reviewText) {
+    int points = BASE_POINTS; // Initialize the points to the base points
+    int wordCount = countWords(reviewText); // Count the words in the review text
+    if (wordCount > BONUS_WORD_THRESHOLD) {
+        points += BONUS_POINTS; // Add the bonus points to the points
+    }
+    return points;
+}
+
 // Displays a formatted summary of the review
 void Review::displayReview() const {
     cout << "----------------------------------------" << endl;
