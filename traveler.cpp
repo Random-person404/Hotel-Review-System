@@ -55,6 +55,25 @@ bool Traveler::addReview(string hotel, int rate, string text) {
     }
 }
 
+//Add points to the traveler's loyalty profile and update membership level if needed.
+void Traveler::addPoints(int pts) {
+    loyaltyPoints += pts;
+    updateMembership(); // Check if membership level needs to be updated after adding points
+}
+
+//Updates the membership level based on the current loyalty points.
+void Traveler::updateMembership() { 
+    if (loyaltyPoints >= 10000) {
+        membershipLevel = "Platinum";
+    } else if (loyaltyPoints >= 5000) {
+        membershipLevel = "Gold";
+    } else if (loyaltyPoints >= 1000) {
+        membershipLevel = "Silver";
+    } else {
+        membershipLevel = "Basic";
+    }
+}   
+
 // Displays the traveler's basic profile information
 void Traveler::displayProfile() const {
     cout << "========================================" << endl;
