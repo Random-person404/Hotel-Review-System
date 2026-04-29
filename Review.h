@@ -20,6 +20,8 @@ private:
 public:
     // Default Constructor - Required for fixed-size arrays
     Review();
+
+    // Destructor
     ~Review(){}
 
     // Parameterized Constructor

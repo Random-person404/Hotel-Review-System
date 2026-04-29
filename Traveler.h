@@ -30,6 +30,8 @@ protected:
 public:
     // Default Constructor
     Traveler();
+    // Destructor
+    ~Traveler(){}
 
     // Parameterized Constructor
     // Note: Passes common attributes up to the Traveler base constructor
