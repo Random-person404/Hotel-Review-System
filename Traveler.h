@@ -30,6 +30,7 @@ protected:
 public:
     // Default Constructor
     Traveler();
+    ~Traveler(){}
 
     // Parameterized Constructor
     Traveler(string id, string name, string cty, string st, string mail);
