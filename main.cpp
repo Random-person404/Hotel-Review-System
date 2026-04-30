@@ -233,9 +233,7 @@ int main() {
                 string keyword; // Keyword to search for
                 cout << "\nEnter keyword to search: ";
                 getline(cin, keyword);
-                searchReviewsByKeyword(reviewText, hotelName, reviewUserID, // Search reviews by keyword
-                                      rating, userID, userName, reviewCount,
-                                      userCount, keyword);
+                searchReviewsByKeyword(keyword, travelers, travelerCount); // Search reviews by keyword
                 break; // Break out of the switch statement
             }
             case 14:
@@ -991,56 +989,66 @@ void sortHotelsByReviewCount(Traveler list[], int travelerCount) {
     }
 }
 
-void searchReviewsByKeyword(string reviewText[], string hotelName[],  // Search reviews by keyword
-                            string reviewUserID[], int rating[],
-                            string userID[], string userName[],
-                            int reviewCount, int userCount, string keyword) {
-    bool found = false; // Flag to check if the keyword is found
-
-    cout << "\n========================================\n";
-    cout << "SEARCH RESULTS FOR KEYWORD: \"" << keyword << "\"\n";
-    cout << "========================================\n";
-
-    // Convert keyword to lowercase for case-insensitive search
-    string keywordLower = keyword;
-    for (size_t i = 0; i < keywordLower.length(); i++) {
-        if (keywordLower[i] >= 'A' && keywordLower[i] <= 'Z') {
-            keywordLower[i] = keywordLower[i] - 'A' + 'a';
+void keywordSearch(const Traveler travelers[], int travelerCount, string keyword)
+{
+      keyword = toLowercase(keyword);// Convert the keyword to lowercase to make the search case-insensitive
+		  keyWord = " " + keyword + " ";// Add spaces before and after keyword to match whole words only
+      // Loop through all review statements
+		  for (int i = 0; i < travelerCount; i++)
+    	{
+    		string review = " " + toLowercase(rStatement[i]) + " ";// Convert the review statement to lowercase and add spaces at both ends
+        // Replace all punctuation in the review with spaces to avoid punctuation like "," and "."from affecting keyword matching
+        for (char &c : review)
+        {
+            	if (ispunct(c))
+                c = ' ';
         }
-    }
+        // Check if the keyword exists in the review
+			  if (review.find(keyWord) != string::npos)
+        {
+        	found = true;
+        	break;
+    		}
+    	}
 
-    for (int i = 0; i < reviewCount; i++) {
-        // Convert review text to lowercase for comparison
-        string reviewLower = reviewText[i];
-        for (size_t j = 0; j < reviewLower.length(); j++) {
-            if (reviewLower[j] >= 'A' && reviewLower[j] <= 'Z') {
-                reviewLower[j] = reviewLower[j] - 'A' + 'a';
-            }
+    	if(!found)
+    	cout << "Keyword " << key << " not found. " << endl;
+	}
+    if(found)
+    {
+    	cout << "===============================================================================================" << endl;
+    	cout << left << setw(15) << "User ID";
+    	cout << setw(30) << "Hotel Name ";
+    	cout << "Review Statement" << endl;
+    	cout << "===============================================================================================" << endl;
+    	for (int i = 0; i < rCount; i++)
+    	{
+    		string review = " " + toLowercase(rStatement[i]) + " ";// Convert the review statement to lowercase and add spaces at both ends
+        // Replace all punctuation in the review with spaces to avoid punctuation like "," and "."from affecting keyword matching
+        for (char &c : review)
+        {
+            if (ispunct(c))
+            c = ' ';
         }
+        // Display the complete review if the keyword exists in the review
+    		if (review.find(keyWord) != string::npos)
+    		{
+        	cout << setw(15) << rID[i]
+              << setw(30) << rHotel[i]
+              << rStatement[i] << endl;
+    		}
+    	}
+	}
 
-        // Check if keyword exists in review text
-        if (reviewLower.find(keywordLower) != string::npos) {
-            found = true;
+}
 
-            // Find user name
-            string userNameDisplay = "Unknown";
-            for (int j = 0; j < userCount; j++) {
-                if (reviewUserID[i] == userID[j]) {
-                    userNameDisplay = userName[j];
-                    break;
-                }
-            }
-
-            cout << "\nUser: " << userNameDisplay << " (" << reviewUserID[i] << ")\n";
-            cout << "Hotel: " << hotelName[i] << endl;
-            cout << "Rating: " << rating[i] << "/5" << endl;
-            cout << "Review: " << reviewText[i] << endl;
-            cout << "----------------------------------------\n";
-        }
+// This function converts all characters in the input string to lowercase
+string toLowercase(const string& str)
+{
+    string lowerStr = str;
+    for (char &c : lowerStr)
+	  {
+        c = tolower(c);
     }
-
-    if (!found) {
-        cout << "No reviews found containing the keyword \"" << keyword << "\".\n";
-    }
-    cout << "========================================\n";
+    return lowerStr;
 }
