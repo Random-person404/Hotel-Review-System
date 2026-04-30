@@ -32,7 +32,7 @@ public:
     void setMemberDetails(string level, int pts, int rc);
 
     //Add Reviews
-    void addReview();
+    void addReview(string hotel, int rating, string text);
 
     //Logic Location: Processing logic inside member functions.
     //Updates membership level automatically based on point thresholds.
@@ -40,6 +40,9 @@ public:
 
     //Logic Location: Adds points and updates membership.
     void addPoints(int pts);
+
+    //Calculate points for a review based on its content (e.g., length, rating).
+    int calculatePoints(const string& reviewText) const;
 
     //Overriding displayProfile to show the specialized data 
     //alongside inherited attributes.
@@ -50,7 +53,7 @@ public:
 
     // display a specific review by index
     Review getReview(int index) const;
-    
+
     friend void generateReportSummary(Traveler travelers[], int travelerCount);
 };
 

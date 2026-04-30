@@ -36,42 +36,34 @@ void Traveler::setMemberDetails(string level, int pts, int rc) {
 //Logic Location: Processing logic inside member functions.
 //Adds a new review to the internal fixed-size array.
 //Returns true if successful, false if the array is full.
-void Traveler::addReview() {
-    if (reviewCount >= MAX_REVIEWS) {
-        cout << "Maximum review limit reached!\n"; // Maximum review limit reached
+void Traveler::addReview(string hotel, int rating, string text) {
+    if (reviewCount >= 500) {
+        cout << "Review limit reached!\n";
         return;
     }
-
-    int newRating; // Initialize the new rating to 0
-    string newHotelName; // Initialize the new hotel name to 0
-    string newReviewText; // Initialize the new review text to an empty string
-
-    cout << "\n========================================\n";
-    cout << "ADD NEW REVIEW\n";
-    cout << "========================================\n";
-
-    cout << "Enter Rating (1-5): "; // Prompt the user to enter a rating
-    cin >> newRating; 
-
-    // Get Review Text
-    cout << "Enter Review Text: ";
-    cin.ignore(1000, '\n'); 
-    getline(cin, newReviewText);
-
-    // Get Hotel Name
-    cout << "Enter Hotel Name: ";
-    getline(cin, newHotelName);
-
-    travelerReviews[reviewCount].setReviewDetails(newHotelName, newRating, newReviewText, userID);
+    // Store the review in the composed array
+    travelerReviews[reviewCount].setReviewDetails(hotel, rating, text, userID);
     reviewCount++;
-
-    cout << "\nReview added successfully!\n";
 }
 
 //Add points to the traveler's loyalty profile and update membership level if needed.
 void Traveler::addPoints(int pts) {
     loyaltyPoints += pts;
     updateMembership(); // Check if membership level needs to be updated after adding points
+}
+
+int Traveler::calculatePoints(const string& reviewText) const {
+    int words = 0;
+    bool inWord = false;
+    for (size_t i = 0; i < reviewText.length(); i++) {
+        if (reviewText[i] == ' ' || reviewText[i] == '\t') 
+            inWord = false;
+        else if (!inWord) { 
+            inWord = true; 
+            words++; 
+        }
+    }
+    return (words > 50) ? 110 : 100;  // 100 base + 10 bonus if over 50 words
 }
 
 //Updates the membership level based on the current loyalty points.
