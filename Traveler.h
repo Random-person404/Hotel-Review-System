@@ -19,22 +19,23 @@ public:
     // Default Constructor
     Traveler();
 
-    // Parameterized Constructor
-    // Note: Passes common attributes up to the Traveler base constructor
+	//overloading constructor
     Traveler(string id, string name, string cty, string st, string mail, string level, int pts);
+    
+    //detructor
+    ~Traveler(){}
 
-    // Getters for specialized data
+    // Getters 
     string getMembershipLevel() const;
     int getLoyaltyPoints() const;
     int getReviewCount() const;
 
-    // Setters for specialized data
+    // Setters
     void setMemberDetails(string level, int pts, int rc);
 
     //Add Reviews
     void addReview(string hotel, int rating, string text);
 
-    //Logic Location: Processing logic inside member functions.
     //Updates membership level automatically based on point thresholds.
     void updateMembership();
 
@@ -53,8 +54,8 @@ public:
 
     // display a specific review by index
     Review getReview(int index) const;
-
-    friend void generateReportSummary(Traveler travelers[], int travelerCount);
+    
+    friend void generateAnalyticsReport(Traveler travelers[], int travelerCount);
 };
 
 #endif

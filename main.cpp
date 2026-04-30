@@ -1,9 +1,8 @@
-%%writefile main.cpp
-#include <iostream> // Include the iostream library for input and output
-#include <fstream> // Include the fstream library for file input and output
-#include <iomanip> // Include the iomanip library for input and output manipulation
-#include <string> // Include the string library for string operations
-#include <cstdlib> // Include the cstdlib library for general purpose functions
+#include <iostream> 
+#include <fstream> 
+#include <iomanip> 
+#include <string> 
+#include <cstdlib> 
 #include "Person.h"
 #include "Traveler.h"
 #include "Review.h"
@@ -12,64 +11,53 @@ using namespace std;
 
 // Constants
 const int MAX_USERS = 100;  // Maximum number of users
-const int MAX_REVIEWS = 500;  // Maximum number of reviews
 const int MAX_STRING_LENGTH = 200;  // Maximum length of a string
 const int BASE_POINTS = 100;  // Base points for each review
 const int BONUS_POINTS = 10;  // Bonus points for each review
 const int BONUS_WORD_THRESHOLD = 50;  // Threshold for bonus points
 
-//===============================Function prototypes=====================
-void loadTraveler(const string& filename, string userID[], string userName[],  // Load users from a file
-               string country[], string state[], string email[],
-               string membership[], int points[], int& userCount);
-void loadReviews(const string& filename, string userID[], int rating[],  // Load reviews from a file
-                 string reviewText[], string hotelName[], int& reviewCount);
+//===============================Function prototypes======================================
+//load functions
+int loadTravelers(const string& filename, Traveler travelers[]);
+void loadReviews(const string& filename, Traveler travelers[], int);
+//save functions
+void saveTravelers(string, Traveler[], int);
+void saveReviews(string, Traveler[], int);
+
 void displayMenu(); // Display the menu
 int getChoice(); // Get the choice from the user
-void generateReportSummary(Traveler travelers[], int travelerCount);
+
+void displayAllHotels(Traveler[]); // Display all hotels
+void displayAllUsers(Traveler[]); // Display all users
+
+//sort and display
 void displayUsersByCategory(Traveler travelers[], int travelerCount); // Display users grouped by membership category
+void displayPositiveReviewsByHotel(string targetHotel, Traveler travelers[], int travelerCount);
 void displayTopReviewerLeaderboard(Traveler travelers[], int travelerCount); // Display top reviewer leaderboard
 void displayTop3Users(Traveler travelers[], int travelerCount); // Display top 3 users with most reviews
 void displayHotelRatingSummary(Traveler travelers[], int travelerCount); // Display hotel rating summary
-int countWords(const string& text); // Count the words in a string
-void displayAllHotels(string hotelName[], int reviewCount); // Display all hotels
-void displayAllUsers(string userID[], string userName[], int userCount); // Display all users
-void saveUsers(const string& filename, string userID[], string userName[],  // Save the users to a file
-               string country[], string state[], string email[],
-               string membership[], int points[], int userCount); // Save the users to a file
-void saveReviews(const string& filename, string userID[], int rating[], // Save the reviews to a file
-                 string reviewText[], string hotelName[], int reviewCount);
 void sortUsersByPoints(Traveler list[], int travelerCount); // Sort the users by points
-void sortHotelsByReviewCount(string hotelName[], int rating[], // Sort the hotels by review count
-                              string reviewText[], string reviewUserID[],
-                              int reviewCount);
-void searchReviewsByKeyword(string reviewText[], string hotelName[], // Search reviews by keyword
-                            string reviewUserID[], int rating[],
-                            string userID[], string userName[],
-                            int reviewCount, int userCount, string keyword);
+void sortHotelsByReviewCount(const Traveler[], int);
+void searchReviewsByKeyword(const Traveler[], int, string);
 
-//-----------validation----------------------------
-bool validateUserID(const string& userID, string userIDList[], int userCount); // Validate the user ID
+//friend function
+void generateAnalyticsReport(Traveler travelers[], int travelerCount);
+
+//validation
 bool validateRating(int rating); // Validate the rating
-//---------------------------------------------------
+bool caseInsensitiveCompare(const string& a, const string& b);
+string toLowercase(const string& str);
+//=================================================================================
 
-//------------for better readability-------------------
-string toUpper(const string& str); // Convert a string to uppercase
-bool caseInsensitiveCompare(const string& str1, const string& str2); // Compare two strings case insensitively
-string findUserIDCaseInsensitive(const string& input, string userIDList[], int userCount); // Find a user ID case insensitively
-//-----------------------------------------------------
-//===================================================================
 
-//=================Main function=================
+//=================Main function==================================================
 int main() { 
     // Parallel arrays for travelers
     Traveler travelers[MAX_USERS];
-    // Parallel arrays for reviews
-    Review reviews[MAX_REVIEWS];
     int travelerCount = 0; 
 
     // Load data from files (open once for reading)
-    travelerCount = loadUsers("users.txt", travelers); // Load users from the users.txt file
+    travelerCount = loadTravelers("users.txt", travelers); // Load users from the users.txt file
     loadReviews("reviews.txt", travelers, travelerCount); // Load reviews from the reviews.txt file
 
     int choice; // Choice from the user
@@ -81,71 +69,71 @@ int main() {
 
         switch(choice) {
             case 1: {   // Display reviews by user
-            string targetUserID;
-            cout << "\nEnter User ID: ";
-            cin >> targetUserID;
-            cin.ignore(1000, '\n');
-
-            bool found = false;
-            for (int i = 0; i < travelerCount; i++) {
-                if (travelers[i].getUserID() == targetUserID) {
-                    travelers[i].displayAllReviews();
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                cout << "Invalid User ID! Please Enter a Valid User ID.\n";
-            }
-            break;
-        }
+	            string targetUserID;
+	            cout << "\nEnter User ID: ";
+	            cin >> targetUserID;
+	            cin.ignore(1000, '\n');
+	
+	            bool found = false;
+	            for (int i = 0; i < travelerCount; i++) {
+	                if (travelers[i].getUserID() == targetUserID) {
+	                    travelers[i].displayAllReviews();
+	                    found = true;
+	                    break;
+	                }
+	            }
+	            if (!found) {
+	                cout << "Invalid User ID! Please Enter a Valid User ID.\n";
+	            }
+	            break;
+	       		}
             case 2: {   // Display reviews by hotel
-    string targetHotel;
-    cout << "\nEnter Hotel Name: ";
-    getline(cin, targetHotel);
-
-    bool found = false;
-    cout << "\n========================================\n";
-    cout << "REVIEWS FOR HOTEL: " << targetHotel << "\n";
-    cout << "========================================\n";
-
-    for (int i = 0; i < travelerCount; i++) {
-        for (int j = 0; j < travelers[i].getReviewCount(); j++) {
-            Review r = travelers[i].getReview(j);
-            if (caseInsensitiveCompare(r.getHotelName(), targetHotel)) {
-                found = true;
-                cout << "\nUser: " << travelers[i].getUserName() << endl;
-                cout << "Rating: " << r.getRating() << "/5" << endl;
-                cout << "Review: " << r.getReviewText() << endl;
-                cout << "----------------------------------------\n";
-            }
-        }
-    }
-
-    if (!found) {
-        cout << "No reviews found for this hotel.\n";
-    }
-    break;
-}
+			    string targetHotel;
+			    cout << "\nEnter Hotel Name: ";
+			    getline(cin, targetHotel);
+			
+			    bool found = false;
+			    cout << "\n========================================\n";
+			    cout << "REVIEWS FOR HOTEL: " << targetHotel << "\n";
+			    cout << "========================================\n";
+			
+			    for (int i = 0; i < travelerCount; i++) {
+			        for (int j = 0; j < travelers[i].getReviewCount(); j++) {
+			            Review r = travelers[i].getReview(j);
+			            if (caseInsensitiveCompare(r.getHotelName(), targetHotel)) {
+			                found = true;
+			                cout << "\nUser: " << travelers[i].getUserName() << endl;
+			                cout << "Rating: " << r.getRating() << "/5" << endl;
+			                cout << "Review: " << r.getReviewText() << endl;
+			                cout << "----------------------------------------\n";
+			            }
+			        }
+			    }
+			
+			    if (!found) {
+			        cout << "No reviews found for this hotel.\n";
+			    }
+			    break;
+			}
             case 3: {   // Display info by user
-            string targetUserID;
-            cout << "\nEnter User ID: ";
-            cin >> targetUserID;
-            cin.ignore(1000, '\n');
-
-            bool found = false;
-            for (int i = 0; i < travelerCount; i++) {
-                if (travelers[i].getUserID() == targetUserID) {
-                    travelers[i].display();
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                cout << "Invalid User ID! Please Enter a Valid User ID.\n";
-            }
-            break;
-        }
+	            string targetUserID;
+	            cout << "\nEnter User ID: ";
+	            cin >> targetUserID;
+	            cin.ignore(1000, '\n');
+	
+	            bool found = false;
+	            for (int i = 0; i < travelerCount; i++) {
+	                if (travelers[i].getUserID() == targetUserID) {
+	                    travelers[i].displayProfile();
+	                    found = true;
+	                    break;
+	                }
+	            }
+	            if (!found) {
+	                cout << "Invalid User ID! Please Enter a Valid User ID.\n";
+	            }
+	            break;
+	        }
             case 4: {   // Display positive reviews by hotel
                 string targetHotel;
                 cout << "\nEnter Hotel Name: "; // Prompt the user to enter a hotel name
@@ -154,7 +142,7 @@ int main() {
                 break; // Break out of the switch statement
             }
             case 5:   // Display summary of activities
-                generateReportSummary(travelers, travelerCount);
+                generateAnalyticsReport(travelers, travelerCount);
                 break;
             case 6:
                 displayUsersByCategory(travelers, travelerCount); // Display users grouped by membership category
@@ -220,7 +208,6 @@ int main() {
                 cout << "\nReview added successfully!\n";
                 cout << "New Points Total: " << travelers[idx].getLoyaltyPoints() << endl;
                 cout << "Membership Level: " << travelers[idx].getMembershipLevel() << endl;
-                dataModified = true;
                 break;
             }
             case 11:   // Sort users by points
@@ -233,7 +220,7 @@ int main() {
                 string keyword; // Keyword to search for
                 cout << "\nEnter keyword to search: ";
                 getline(cin, keyword);
-                searchReviewsByKeyword(keyword, travelers, travelerCount); // Search reviews by keyword
+                searchReviewsByKeyword(travelers, travelerCount, keyword); // Search reviews by keyword
                 break; // Break out of the switch statement
             }
             case 14:
@@ -251,19 +238,16 @@ int main() {
     } while (choice != 14); //if the choice is the exit option, exit the loop
 
     // Save data to files (open once for writing)
-    saveUsers("users.txt", userID, userName, country, state, email, // Save the users to the users.txt file
-              membership, points, userCount);
-    if (dataModified) {
-        saveReviews("reviews.txt", reviewUserID, rating, reviewText, // Save the reviews to the reviews.txt file
-                   hotelName, reviewCount);
-    }
+    saveTravelers("users.txt", travelers, travelerCount);
+    saveReviews("reviews.txt", travelers, travelerCount);
 
-    cout << "Data saved successfully!\n"; // Data saved successfully
+    cout << "Data saved successfully!\n"; 
 
     return 0; // Return 0 to indicate successful execution
 }
+//==============================================================================================
 
-int loadUsers(const string& filename, Traveler travelers[]) {
+int loadTravelers(const string& filename, Traveler travelers[]) {
     ifstream infile(filename);
     if (!infile) {
         cout << "Error: Cannot open " << filename << endl;
@@ -293,7 +277,7 @@ int loadUsers(const string& filename, Traveler travelers[]) {
     return i; // returns how many travelers were loaded
 }
 
-// Reads reviews.txt once — assigns each review to matching Traveler
+// Reads reviews.txt once and assigns each review to matching Traveler
 void loadReviews(const string& filename, Traveler travelers[], int travelerCount) {
     ifstream infile(filename);
     if (!infile) {
@@ -373,74 +357,6 @@ int getChoice() {
     return 14; // Exit option
 }
 
-void displayReviewsByUser(string userID[], string reviewText[], // Display reviews by user
-                          string hotelName[], int rating[],
-                          int reviewCount, string targetUserID) {
-    bool found = false; // Flag to check if the user ID is found
-    cout << "\n========================================\n";
-    cout << "REVIEWS BY USER: " << targetUserID << "\n"; // Display the reviews by user
-    cout << "========================================\n";
-
-    for (int i = 0; i < reviewCount; i++) {
-        if (userID[i] == targetUserID) {
-            found = true;
-            cout << "\nHotel: " << hotelName[i] << endl; // Display the hotel name
-            cout << "Rating: " << rating[i] << "/5" << endl;
-            cout << "Review: " << reviewText[i] << endl; // Display the review text
-            cout << "----------------------------------------\n";
-        }
-    }
-
-    if (!found) {
-        cout << "No reviews found for this user.\n"; // No reviews found for this user
-    }
-}
-
-void displayReviewsByHotel(string userID[], string reviewText[], // Display reviews by hotel
-                           string hotelName[], int rating[],
-                           string userName[], int reviewCount,
-                           string targetHotel) {
-    bool found = false; // Flag to check if the hotel name is found
-    cout << "\n========================================\n";
-    cout << "REVIEWS FOR HOTEL: " << targetHotel << "\n"; // Display the reviews for the hotel
-    cout << "========================================\n";
-
-    for (int i = 0; i < reviewCount; i++) {
-        if (caseInsensitiveCompare(hotelName[i], targetHotel)) {
-            found = true;
-            cout << "\nUser ID: " << userID[i] << endl; // Display the user ID
-            cout << "Rating: " << rating[i] << "/5" << endl;
-            cout << "Review: " << reviewText[i] << endl; // Display the review text
-            cout << "----------------------------------------\n";
-        }
-    }
-
-    if (!found) {
-        cout << "No reviews found for this hotel.\n"; // No reviews found for this hotel
-    }
-}
-
-void displayUserInfo(string userID[], string userName[], string country[],  // Display user information
-                     string state[], string email[], string membership[],
-                     int points[], int userCount, string targetUserID) {
-    for (int i = 0; i < userCount; i++) { // Loop through the users
-        if (userID[i] == targetUserID) {
-            cout << "\n========================================\n";
-            cout << "USER INFORMATION\n"; // Display the user information
-            cout << "========================================\n";
-            cout << "User ID: " << userID[i] << endl; // Display the user ID
-            cout << "Name: " << userName[i] << endl; // Display the name
-            cout << "Country: " << country[i] << endl; // Display the country
-            cout << "State: " << state[i] << endl; // Display the state
-            cout << "Email: " << email[i] << endl; // Display the email
-            cout << "Membership: " << membership[i] << endl; // Display the membership
-            cout << "Points: " << points[i] << endl; // Display the points
-            cout << "========================================\n";
-            return;
-        }
-    }
-}
-
 void displayPositiveReviewsByHotel(string targetHotel, Traveler travelers[], int travelerCount) {
     bool found = false;
     cout << "\n========================================\n";
@@ -463,25 +379,6 @@ void displayPositiveReviewsByHotel(string targetHotel, Traveler travelers[], int
     if (!found) {
         cout << "No positive reviews found for this hotel.\n";
     }
-}
-
-// Friend function — can access private members of Traveler directly
-void generateReportSummary(Traveler travelers[], int travelerCount) {
-    int totalPoints = 0;
-    int totalReviews = 0;
-
-    for (int i = 0; i < travelerCount; i++) {
-        totalPoints += travelers[i].loyaltyPoints;   // accessing private member directly
-        totalReviews += travelers[i].reviewCount;    // accessing private member directly
-    }
-
-    cout << "\n========================================\n";
-    cout << "SUMMARY OF ACTIVITIES\n";
-    cout << "========================================\n";
-    cout << "Total Number of Users:   " << travelerCount << endl;
-    cout << "Total Number of Reviews: " << totalReviews << endl;
-    cout << "Total Points Awarded:    " << totalPoints << endl;
-    cout << "========================================\n";
 }
 
 void displayUsersByCategory(Traveler travelers[], int travelerCount) {
@@ -509,7 +406,6 @@ void displayUsersByCategory(Traveler travelers[], int travelerCount) {
     }
     cout << "========================================\n";
 }
-
 
 void sortIndicesByReviewCount(Traveler travelers[], int travelerCount, int sortedIndices[]) {
     for (int i = 0; i < travelerCount; i++) {
@@ -562,7 +458,7 @@ void displayTop3Users(Traveler travelers[], int travelerCount) {
     cout << "\n========================================\n";
     cout << "TOP 3 USERS WITH MOST REVIEWS\n";
     cout << "========================================\n";
-    for (int i = 0; i < 3 && sortedIndices[i] != -1; i++) {
+    for (int i = 0; i < 3 && i < travelerCount; i++) {
         int idx = sortedIndices[i];
         cout << (i + 1) << ". " << travelers[idx].getUserID() << " - " << travelers[idx].getUserName()
              << " (" << travelers[idx].getReviewCount() << " reviews)\n";
@@ -571,9 +467,9 @@ void displayTop3Users(Traveler travelers[], int travelerCount) {
 }
 
 void displayHotelRatingSummary(Traveler travelers[], int travelerCount) {
-     string uniqueHotels[MAX_REVIEWS];
-    double totalRatings[MAX_REVIEWS] = {0};
-    int hotelReviewCount[MAX_REVIEWS] = {0};
+     string uniqueHotels[500];
+    double totalRatings[500] = {0};
+    int hotelReviewCount[500] = {0};
     int hotelCount = 0;
 
     // Loop through all travelers and their reviews
@@ -619,325 +515,50 @@ void displayHotelRatingSummary(Traveler travelers[], int travelerCount) {
              << setw(20) << hotelReviewCount[i] << endl;
     }
     cout << "========================================\n";
-    break;
 }
 
-int countWords(const string& text) {
-    int wordCount = 0; // Initialize the word count to 0
-    bool inWord = false;
-    for (size_t i = 0; i < text.length(); i++) {
-        if (text[i] == ' ' || text[i] == '\t') {
-            inWord = false; // Set the in word flag to false
-        } else if (!inWord) {
-            inWord = true; // Set the in word flag to true
-            wordCount++;
-        }
-    }
-    return wordCount;
-}
-
-int calculateReviewPoints(const string& reviewText) {
-    int points = BASE_POINTS; // Initialize the points to the base points
-    int wordCount = countWords(reviewText); // Count the words in the review text
-    if (wordCount > BONUS_WORD_THRESHOLD) {
-        points += BONUS_POINTS; // Add the bonus points to the points
-    }
-    return points;
-}
-
-string getMembershipCategory(int points) {  // Get the membership category for a user
-    if (points >= 10000) {
-        return "Platinum"; // Return the platinum category
-    } else if (points >= 5000) {
-        return "Gold"; // Return the gold category
-    } else if (points >= 1000) {
-        return "Silver"; // Return the silver category
-    } else {
-        return "Basic"; // Return the basic category
-    }
-}
-
-// Helper function to compare membership levels (higher number = higher tier)
-int getMembershipLevel(const string& category) { // Get the membership level for a category
-    if (category == "Platinum") return 4; // Return the platinum level
-    if (category == "Gold") return 3;
-    if (category == "Silver") return 2; // Return the silver level
-    if (category == "Basic") return 1;
-    return 0; // Return the basic level
-}
-
-// Update membership categories based on current points (without changing points)
-void updateMembershipCategories(string userID[], string userName[],  // Update the membership categories
-                                 int points[], string membership[],
-                                 int userCount) {
-    for (int i = 0; i < userCount; i++) {
-        membership[i] = getMembershipCategory(points[i]); // Set the membership category to the points
-    }
-}
-
-// Add points for a newly added review and update membership
-void addPointsForNewReview(string userID[], string userName[], int points[],  // Add points for a newly added review
-                           string membership[], string newUserID,
-                           string newReviewText, int userCount) {
-    // Calculate points for the new review
-    int reviewPoints = calculateReviewPoints(newReviewText); // Calculate the points for the new review
-
-    // Find the user and add points
-    for (int i = 0; i < userCount; i++) {
-        if (userID[i] == newUserID) { // If the user ID is the same as the new user ID
-            int oldPoints = points[i]; // Set the old points to the points
-            string oldCategory = membership[i];
-            points[i] += reviewPoints; // Add points to existing points
-            string newCategory = getMembershipCategory(points[i]);
-            membership[i] = newCategory;
-
-            // Show points update message
-            cout << "\n========================================\n";
-            cout << "POINTS UPDATED\n";
-            cout << "========================================\n";
-            cout << userName[i] << " (" << userID[i] << ") received "
-                 << reviewPoints << " points for the new review.\n";
-            cout << "Previous points: " << oldPoints << "\n";
-            cout << "New total points: " << points[i] << "\n";
-            cout << "Membership category: " << newCategory << "\n";
-
-            // Show upgrade notification if moved to higher category
-            if (oldCategory != newCategory &&
-                getMembershipLevel(newCategory) > getMembershipLevel(oldCategory)) {
-                cout << "\n*** UPGRADE! ***\n";
-                cout << "Congratulations! " << userName[i] << " has been upgraded from "
-                     << oldCategory << " to " << newCategory << "!\n";
-            }
-            cout << "========================================\n\n";
-            break;
-        }
-    }
-}
-
-void addNewReview(string reviewUserID[], int rating[], string reviewText[],  // Add a new review
-                  string hotelName[], int& reviewCount,
-                  string userID[], int userCount, string& newUserID,
-                  string& newReviewText) {
-    if (reviewCount >= MAX_REVIEWS) {
-        cout << "Maximum review limit reached!\n"; // Maximum review limit reached
-        return;
-    }
-
-    int newRating; // Initialize the new rating to 0
-    string newHotelName; // Initialize the new hotel name to 0
-
-    cout << "\n========================================\n";
-    cout << "ADD NEW REVIEW\n";
-    cout << "========================================\n";
-
-    // Get User ID with validation (prevent infinite loop)
-    bool validUser = false;
-    int attempts = 0;
-    const int MAX_ATTEMPTS = 5;
-    while (!validUser && attempts < MAX_ATTEMPTS) {
-        cout << "Enter User ID: ";
-        if (cin >> newUserID) {
-            cin.ignore(1000, '\n'); // Clear the input buffer
-            // Convert to correct case
-            newUserID = findUserIDCaseInsensitive(newUserID, userID, userCount);
-            validUser = validateUserID(newUserID, userID, userCount);
-            if (!validUser) {
-                attempts++;
-                if (attempts < MAX_ATTEMPTS) {
-                    cout << "Invalid User ID! Please try again.\n";
-                } else {
-                    cout << "Too many invalid attempts. Cancelling review addition.\n";
-                    return;
-                }
-            }
-        } else {
-            cin.clear();
-            cin.ignore(1000, '\n');
-            attempts++;
-            if (attempts < MAX_ATTEMPTS) {
-                cout << "Invalid input! Please enter a valid User ID.\n";
-            } else {
-                cout << "Too many invalid attempts. Cancelling review addition.\n";
-                return;
-            }
-        }
-    }
-
-    // Get Rating with validation (prevent infinite loop)
-    bool validRating = false; // Flag to check if the rating is valid
-    attempts = 0; // Initialize the attempts to 0
-    while (!validRating && attempts < MAX_ATTEMPTS) {
-        cout << "Enter Rating (1-5): "; // Prompt the user to enter a rating
-        if (cin >> newRating) {
-            cin.ignore(1000, '\n'); // Clear the input buffer
-            validRating = validateRating(newRating); // Validate the rating
-            if (!validRating) {
-                attempts++;
-                if (attempts < MAX_ATTEMPTS) {
-                    cout << "Invalid Rating! Please enter a number between 1 and 5.\n";
-                } else {
-                    cout << "Too many invalid attempts. Cancelling review addition.\n";
-                    return;
-                }
-            }
-        } else {
-            cin.clear();
-            cin.ignore(1000, '\n');
-            attempts++;
-            if (attempts < MAX_ATTEMPTS) {
-                cout << "Invalid input! Please enter a number between 1 and 5.\n";
-            } else {
-                cout << "Too many invalid attempts. Cancelling review addition.\n";
-                return;
-            }
-        }
-    }
-
-    // Get Review Text
-    cout << "Enter Review Text: ";
-    getline(cin, newReviewText);
-
-    // Get Hotel Name
-    cout << "Enter Hotel Name: ";
-    getline(cin, newHotelName);
-
-    // Add review to arrays
-    reviewUserID[reviewCount] = newUserID;
-    rating[reviewCount] = newRating;
-    reviewText[reviewCount] = newReviewText;
-    hotelName[reviewCount] = newHotelName;
-    reviewCount++;
-
-    cout << "\nReview added successfully!\n";
-}
-
-// Helper function to convert string to uppercase
-string toUpper(const string& str) {
-    string result = str;
-    for (size_t i = 0; i < result.length(); i++) {
-        if (result[i] >= 'a' && result[i] <= 'z') {
-            result[i] = result[i] - 'a' + 'A';
-        }
-    }
-    return result;
-}
-
-// Helper function for case-insensitive string comparison
-bool caseInsensitiveCompare(const string& str1, const string& str2) {   // Compare two strings case insensitively
-    if (str1.length() != str2.length()) return false;
-    for (size_t i = 0; i < str1.length(); i++) {
-        char c1 = str1[i];
-        char c2 = str2[i];
-        // Convert to uppercase for comparison
-        if (c1 >= 'a' && c1 <= 'z') c1 = c1 - 'a' + 'A';
-        if (c2 >= 'a' && c2 <= 'z') c2 = c2 - 'a' + 'A';
-        if (c1 != c2) return false;
-    }
-    return true;
-}
-
-bool validateUserID(const string& userID, string userIDList[], int userCount) {   // Validate the user ID
-    string upperInput = toUpper(userID);
-    for (int i = 0; i < userCount; i++) {
-        if (caseInsensitiveCompare(userIDList[i], upperInput)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// Find user ID with case-insensitive matching and return the correct case
-string findUserIDCaseInsensitive(const string& input, string userIDList[], int userCount) {
-    string upperInput = toUpper(input);
-    for (int i = 0; i < userCount; i++) {
-        if (caseInsensitiveCompare(userIDList[i], upperInput)) {
-            return userIDList[i]; // Return the correct case from the list
-        }
-    }
-    return input; // Return original if not found
-}
-
-bool validateRating(int rating) {   // Validate the rating
-    return (rating >= 1 && rating <= 5);
-}
-
-void saveUsers(const string& filename, string userID[], string userName[],  // Save the users to a file
-               string country[], string state[], string email[],
-               string membership[], int points[], int userCount) {
-    ofstream outFile(filename);
-    if (!outFile) {
-        cout << "Error: Cannot open " << filename << " for writing\n";
-        return;
-    }
-
-    for (int i = 0; i < userCount; i++) {
-        outFile << userID[i] << "\t" << userName[i] << "\t"
-                << country[i] << "\t" << state[i] << "\t"
-                << email[i] << "\t" << membership[i] << "\t"
-                << points[i] << endl;
-    }
-
-    outFile.close();
-}
-
-void saveReviews(const string& filename, string userID[], int rating[],     // Save the reviews to a file
-                 string reviewText[], string hotelName[], int reviewCount) {
-    ofstream outFile(filename);
-    if (!outFile) {
-        cout << "Error: Cannot open " << filename << " for writing\n";
-        return;
-    }
-
-    for (int i = 0; i < reviewCount; i++) {
-        outFile << userID[i] << "\t" << rating[i] << "\t"
-                << reviewText[i] << "\t" << hotelName[i] << endl;
-    }
-
-    outFile.close();
-}
-
-// Additional Features Implementation
-
-void sortUsersByPoints(Traveler list[], int travelerCount) {
-
-    int list[MAX_USERS];
+void sortUsersByPoints(Traveler travelers[], int travelerCount) {
+    // Use a temparaily array so we can change the order in this temp array not the actual array
+    int tempArray[MAX_USERS];
     for (int i = 0; i < travelerCount; i++) {
-        list[i] = i;
+        tempArray[i] = i;                       //intialize the array so like [1,2,3,4,5]
     }
 
-    // Bubble Sort on the object array
+    // Bubble sort by points using operator>
     for (int i = 0; i < travelerCount - 1; i++) {
         for (int j = 0; j < travelerCount - i - 1; j++) {
-            // Compare the points of two Traveler objects
-            if (list[j].getLoyaltyPoints() < list[j+1].getLoyaltyPoints()) {
-                // Swap the entire objects
-                Traveler temp = list[j];
-                list[j] = list[j+1];
-                list[j+1] = temp;
+            if (travelers[tempArray[j]].getLoyaltyPoints() < 
+                travelers[tempArray[j+1]].getLoyaltyPoints()) {
+                // Swap position in this temp array
+                int temp = tempArray[j];
+                tempArray[j] = tempArray[j+1];
+                tempArray[j+1] = temp;
             }
         }
-    }
+    }   //after bubble sort the array would be like [4,3,5,1,2] which means the position has changed
 
-    // 2. Display the sorted data
+    // Display using sorted indices
     cout << "\n========================================\n";
     cout << "USERS SORTED BY POINTS (Highest to Lowest)\n";
     cout << "========================================\n";
-    cout << left << setw(10) << "User ID" << setw(25) << "Name"
-         << setw(15) << "Membership" << setw(10) << "Points" << endl;
+    cout << left << setw(10) << "User ID" 
+         << setw(25) << "Name"
+         << setw(15) << "Membership" 
+         << setw(10) << "Points" << endl;
     cout << "----------------------------------------\n";
 
     for (int i = 0; i < travelerCount; i++) {
-        // Accessing inherited and specialized attributes through member functions
-        cout << left << setw(10) << list[i].getUserID() 
-             << setw(25) << list[i].getUserName()
-             << setw(15) << list[i].getMembershipLevel() 
-             << setw(10) << list[i].getLoyaltyPoints() << endl;
+        int index = tempArray[i];                     //now we print using ori array but with sorted arrangement
+        cout << left << setw(10) << travelers[index].getUserID()
+             << setw(25) << travelers[index].getUserName()
+             << setw(15) << travelers[index].getMembershipLevel()
+             << setw(10) << travelers[index].getLoyaltyPoints() << endl;
     }
     cout << "========================================\n";
 }
 
-void sortHotelsByReviewCount(Traveler list[], int travelerCount) {
-    // Parallel local arrays for temporary processing (No STL allowed)
+void sortHotelsByReviewCount(const Traveler list[], int travelerCount) {
+    // Parallel local arrays for temporary processing 
     string uniqueHotels[500]; 
     int hotelReviewCounts[500] = {0};
     int hotelCount = 0;
@@ -989,66 +610,127 @@ void sortHotelsByReviewCount(Traveler list[], int travelerCount) {
     }
 }
 
-void keywordSearch(const Traveler travelers[], int travelerCount, string keyword)
+void searchReviewsByKeyword(const Traveler travelers[], int travelerCount, string keyword)
 {
-      keyword = toLowercase(keyword);// Convert the keyword to lowercase to make the search case-insensitive
-		  keyWord = " " + keyword + " ";// Add spaces before and after keyword to match whole words only
-      // Loop through all review statements
-		  for (int i = 0; i < travelerCount; i++)
-    	{
-    		string review = " " + toLowercase(rStatement[i]) + " ";// Convert the review statement to lowercase and add spaces at both ends
-        // Replace all punctuation in the review with spaces to avoid punctuation like "," and "."from affecting keyword matching
-        for (char &c : review)
-        {
-            	if (ispunct(c))
-                c = ' ';
-        }
-        // Check if the keyword exists in the review
-			  if (review.find(keyWord) != string::npos)
-        {
-        	found = true;
-        	break;
-    		}
-    	}
-
-    	if(!found)
-    	cout << "Keyword " << key << " not found. " << endl;
-	}
-    if(found)
+	cout << "===============================================================================================" << endl;
+   	cout << left << setw(15) << "User ID";
+   	cout << setw(30) << "Hotel Name ";
+  	cout << "Review Statement" << endl;
+   	cout << "===============================================================================================" << endl;
+    	
+    bool found = false;	
+    keyword = toLowercase(keyword);   // Convert the keyword to lowercase 
+	keyword = " " + keyword + " ";    // Add spaces before and after keyword to match whole words only exp: search "good" wont come out "goodness"
+	
+    // Loop through all review statements
+	for (int i = 0; i < travelerCount; i++)        //loop thru all traveler
     {
-    	cout << "===============================================================================================" << endl;
-    	cout << left << setw(15) << "User ID";
-    	cout << setw(30) << "Hotel Name ";
-    	cout << "Review Statement" << endl;
-    	cout << "===============================================================================================" << endl;
-    	for (int i = 0; i < rCount; i++)
-    	{
-    		string review = " " + toLowercase(rStatement[i]) + " ";// Convert the review statement to lowercase and add spaces at both ends
-        // Replace all punctuation in the review with spaces to avoid punctuation like "," and "."from affecting keyword matching
-        for (char &c : review)
-        {
-            if (ispunct(c))
-            c = ' ';
-        }
-        // Display the complete review if the keyword exists in the review
-    		if (review.find(keyWord) != string::npos)
-    		{
-        	cout << setw(15) << rID[i]
-              << setw(30) << rHotel[i]
-              << rStatement[i] << endl;
-    		}
-    	}
-	}
+    	for(int j=0; j<travelers[i].getReviewCount(); j++){    //loop thru all review for each traveler
+    		Review r = travelers[i].getReview(j);            //store temp review variable so later can get and print stuff inside
+    		string review = " " + toLowercase(r.getReviewText()) + " ";  // Convert the review statement to lowercase and add spaces at both ends
+    	
+	        for (int k = 0; k < review.length(); k++) { //loop thru every single character
+    			if (ispunct(review[k]))                 //if found punctuation
+        		review[k] = ' ';                       //turn the punctuation into space
+			}
+	        // Check if the keyword exists in the review
+			if (review.find(keyword) != string::npos)      //string::nops means not found
+	        {
+	        	found = true;
+	            cout << left << setw(15) << travelers[i].getUserID();
+	            cout << setw(20) << travelers[i].getUserName();
+	            cout << setw(30) << r.getHotelName();
+	            cout << setw(10) << r.getRating();
+	            cout << r.getReviewText() << endl;
+	    	}
+		}
+    }
 
+    	if(!found){
+    	cout << "Keyword " << keyword << " not found. " << endl;
+	}
 }
 
-// This function converts all characters in the input string to lowercase
-string toLowercase(const string& str)
-{
-    string lowerStr = str;
-    for (char &c : lowerStr)
-	  {
-        c = tolower(c);
+bool validateRating(int rating) {   // Validate the rating
+    return (rating >= 1 && rating <= 5);
+}
+
+void saveTravelers(string filename, Traveler travelers[], int travelerCount) {
+    ofstream outFile(filename);
+    if (!outFile) {
+        cout << "Error: Cannot open " << filename << " for writing\n";
+        return;
     }
-    return lowerStr;
+
+    for (int i = 0; i < travelerCount; i++) {
+        outFile << travelers[i].getUserID() << "\t" << travelers[i].getUserName() << "\t"
+                << travelers[i].getCountry() << "\t" << travelers[i].getState() << "\t"
+                << travelers[i].getEmail() << "\t" << travelers[i]. getMembershipLevel() << "\t"
+                << travelers[i].getLoyaltyPoints() << endl;
+    }
+    outFile.close();
+}
+
+void saveReviews(string filename, Traveler travelers[], int travelerCount) {
+    ofstream outFile(filename);
+    if (!outFile) {
+        cout << "Error: Cannot open reviews.txt for writing\n";
+        return;
+    }
+
+    for (int i = 0; i < travelerCount; i++) {
+        for (int j = 0; j < travelers[i].getReviewCount(); j++) {
+            Review r = travelers[i].getReview(j);
+            outFile << r.getReviewerID() << "\t"
+                    << r.getRating()     << "\t"
+                    << r.getReviewText() << "\t"
+                    << r.getHotelName()  << "\n";
+        }
+    }
+
+    outFile.close();
+}
+
+// Friend function that can access private members of Traveler directly
+// Friend function of Traveler � accesses private members directly
+void generateAnalyticsReport(Traveler travelers[], int travelerCount) {
+    int totalPoints = 0;
+    int totalReviews = 0;
+    string topUser = "";
+    int topCount = 0;
+
+    for (int i = 0; i < travelerCount; i++) {
+        totalPoints += travelers[i].loyaltyPoints;   // private member of Traveler
+        totalReviews += travelers[i].reviewCount;    // private member of Traveler
+
+        if (travelers[i].reviewCount > topCount) {
+            topCount = travelers[i].reviewCount;
+            topUser = travelers[i].userName;         // protected member of Person, accessible via Traveler
+        }
+    }
+
+    cout << "\n========================================\n";
+    cout << "SYSTEM ANALYTICS REPORT\n";
+    cout << "========================================\n";
+    cout << "Total Travelers:         " << travelerCount << endl;
+    cout << "Total Reviews:           " << totalReviews << endl;
+    cout << "Total Points Awarded:    " << totalPoints << endl;
+    cout << "Most Active Reviewer:    " << topUser
+         << " (" << topCount << " reviews)" << endl;
+    cout << "========================================\n";
+}
+
+//------------------------------------------------------------------------------------
+// This function converts all characters in the input string to lowercase
+string toLowercase(const string& str) {
+    string lowerStr = str;             //copy original string into this temporaly string
+    for (int i = 0; i < lowerStr.length(); i++) {    //loop to go thru every letter
+        lowerStr[i] = tolower(lowerStr[i]);        //convert all letter to lowercase one by one
+    }
+    return lowerStr;        //return the temparaily string that is now all lowercase
+}
+
+//compare two data while making both tolowercase
+bool caseInsensitiveCompare(const string& a, const string& b) {
+    return toLowercase(a) == toLowercase(b);
 }

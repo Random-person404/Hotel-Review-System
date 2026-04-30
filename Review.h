@@ -51,11 +51,6 @@ public:
 
 // Calculate calculate for a review
     int calculateReviewPoints(const string& reviewText); 
-
-
-//Mandatory OOP Specification: Friend Function
-//Allows the external report generator to access private members of Review.
-    friend void generateAnalyticsReport(); 
 };
 
 #endif
