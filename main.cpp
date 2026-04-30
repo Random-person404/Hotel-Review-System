@@ -27,16 +27,10 @@ void loadReviews(const string& filename, string userID[], int rating[],  // Load
 void displayMenu(); // Display the menu
 int getChoice(); // Get the choice from the user
 void generateReportSummary(Traveler travelers[], int travelerCount);
-void displayUsersByCategory(string userID[], string userName[],  // Display users by category
-                            string membership[], int points[], int userCount);
-void displayTopReviewerLeaderboard(string userID[], string userName[],  // Display top reviewer leaderboard
-                                    string reviewUserID[], int reviewCount,
-                                    int userCount);
-void displayTop3Users(string userID[], string userName[],  // Display top 3 users
-                      string reviewUserID[], int reviewCount,
-                      int userCount);
-void displayHotelRatingSummary(string hotelName[], int rating[],  // Display hotel rating summary
-                                int reviewCount);
+void displayUsersByCategory(Traveler travelers[], int travelerCount); // Display users grouped by membership category
+void displayTopReviewerLeaderboard(Traveler travelers[], int travelerCount); // Display top reviewer leaderboard
+void displayTop3Users(Traveler travelers[], int travelerCount); // Display top 3 users with most reviews
+void displayHotelRatingSummary(Traveler travelers[], int travelerCount); // Display hotel rating summary
 int countWords(const string& text); // Count the words in a string
 void displayAllHotels(string hotelName[], int reviewCount); // Display all hotels
 void displayAllUsers(string userID[], string userName[], int userCount); // Display all users
@@ -174,25 +168,62 @@ int main() {
                 displayTop3Users(travelers, travelerCount); // Display top 3 users
                 break; // Break out of the switch statement
             case 9:
-                displayHotelRatingSummary(hotelName, rating, reviewCount); // Display hotel rating summary
+                displayHotelRatingSummary(travelers, travelerCount); // Display hotel rating summary
                 break; // Break out of the switch statement
             case 10: {   // Add new review
-                string newUserID, newReviewText;
-                addNewReview(reviewUserID, rating, reviewText, hotelName, // Add a new review
-                            reviewCount, userID, userCount, newUserID,
-                            newReviewText);
-                dataModified = true;
-                // Update review count for the user
-                for (int i = 0; i < userCount; i++) {
-                    if (caseInsensitiveCompare(userID[i], newUserID)) {
-                        reviewCountsPerUser[i]++; // Increment the review count for the user
-                        break; // Break out of the loop
+                string targetID;
+                int idx = -1;
+
+                // Step 1 — keep asking until valid user ID
+                while (idx == -1) {
+                    cout << "\nEnter User ID: ";
+                    cin >> targetID;
+                    cin.ignore(1000, '\n');
+
+                    for (int i = 0; i < travelerCount; i++) {
+                        if (caseInsensitiveCompare(travelers[i].getUserID(), targetID)) {
+                        idx = i;
+                        break;
+                        }
+                    }
+                    if (idx == -1) {
+                        cout << "Invalid User ID! Please try again.\n";
                     }
                 }
-                // Add points for the newly added review
-                addPointsForNewReview(userID, userName, points, membership, // Add points for the newly added review
-                                     newUserID, newReviewText, userCount);
-                break; // Break out of the switch statement
+
+                // Step 2 — keep asking until valid rating
+                int rating = 0;
+                while (rating < 1 || rating > 5) {
+                    cout << "Enter Rating (1-5): ";
+                    if (cin >> rating) {
+                        cin.ignore(1000, '\n');
+                        if (rating < 1 || rating > 5) {
+                            cout << "Invalid rating! Enter a number between 1 and 5.\n";
+                        }
+                    } else {
+                        cin.clear();
+                        cin.ignore(1000, '\n');
+                        cout << "Invalid input! Enter a number between 1 and 5.\n";
+                        rating = 0;
+                    }
+                }
+
+                // Step 3 — get review text and hotel name
+                string reviewText, hotelName;
+                cout << "Enter Review Text: ";
+                getline(cin, reviewText);
+                cout << "Enter Hotel Name: ";
+                getline(cin, hotelName);
+
+                // Step 4 — store review and update points
+                travelers[idx].addReview(hotelName, rating, reviewText);
+                travelers[idx].addPoints(travelers[idx].calculatePoints(reviewText));
+
+                cout << "\nReview added successfully!\n";
+                cout << "New Points Total: " << travelers[idx].getLoyaltyPoints() << endl;
+                cout << "Membership Level: " << travelers[idx].getMembershipLevel() << endl;
+                dataModified = true;
+                break;
             }
             case 11:   // Sort users by points
                 sortUsersByPoints(userID, userName, country, state, email, // Sort the users by points
@@ -545,47 +576,56 @@ void displayTop3Users(Traveler travelers[], int travelerCount) {
     cout << "========================================\n";
 }
 
-void displayHotelRatingSummary(string hotelName[], int rating[],  // Display hotel rating summary
-                                int reviewCount) {
-    // Get unique hotels
-    string uniqueHotels[MAX_REVIEWS]; // Initialize the unique hotels to 0
-    int hotelCount = 0; // Initialize the hotel count to 0
+void displayHotelRatingSummary(Traveler travelers[], int travelerCount) {
+     string uniqueHotels[MAX_REVIEWS];
+    double totalRatings[MAX_REVIEWS] = {0};
+    int hotelReviewCount[MAX_REVIEWS] = {0};
+    int hotelCount = 0;
 
-    for (int i = 0; i < reviewCount; i++) {
-        bool found = false; // Flag to check if the hotel is found
-        for (int j = 0; j < hotelCount; j++) {
-            if (uniqueHotels[j] == hotelName[i]) {
-                found = true; // Set the found flag to true
-                break;
+    // Loop through all travelers and their reviews
+    for (int i = 0; i < travelerCount; i++) {
+        for (int j = 0; j < travelers[i].getReviewCount(); j++) {
+            Review r = travelers[i].getReview(j);
+            string hotel = r.getHotelName();
+
+            // Check if hotel already exists in uniqueHotels
+            bool found = false;
+            for (int k = 0; k < hotelCount; k++) {
+                if (caseInsensitiveCompare(uniqueHotels[k], hotel)) {
+                    totalRatings[k] += r.getRating();
+                    hotelReviewCount[k]++;
+                    found = true;
+                    break;
+                }
             }
-        }
-        if (!found) {
-            uniqueHotels[hotelCount++] = hotelName[i]; // Set the unique hotels to the hotel name
+            // If hotel not found, add it
+            if (!found) {
+                uniqueHotels[hotelCount] = hotel;
+                totalRatings[hotelCount] = r.getRating();
+                hotelReviewCount[hotelCount] = 1;
+                hotelCount++;
+            }
         }
     }
 
+    // Display results
     cout << "\n========================================\n";
-    cout << "HOTEL RATING SUMMARY\n"; // Display the hotel rating summary
+    cout << "HOTEL RATING SUMMARY\n";
     cout << "========================================\n";
-    cout << setw(30) << "Hotel Name" << setw(20) << "Average Rating"
-         << setw(20) << "Total Reviews\n"; // Display the hotel name, average rating, and total reviews
+    cout << setw(30) << "Hotel Name"
+         << setw(20) << "Average Rating"
+         << setw(20) << "Total Reviews\n";
     cout << "----------------------------------------\n";
 
     for (int i = 0; i < hotelCount; i++) {
-        double totalRating = 0; // Initialize the total rating to 0
-        int count = 0;
-        for (int j = 0; j < reviewCount; j++) {
-            if (hotelName[j] == uniqueHotels[i]) {
-                totalRating += rating[j];
-                count++;
-            }
-        }
-        double avgRating = count > 0 ? totalRating / count : 0; // Calculate the average rating
+        double avg = hotelReviewCount[i] > 0 ? 
+                     totalRatings[i] / hotelReviewCount[i] : 0;
         cout << setw(30) << uniqueHotels[i]
-             << setw(20) << fixed << setprecision(2) << avgRating
-             << setw(20) << count << endl; // Display the hotel name, average rating, and total reviews
+             << setw(20) << fixed << setprecision(2) << avg
+             << setw(20) << hotelReviewCount[i] << endl;
     }
     cout << "========================================\n";
+    break;
 }
 
 int countWords(const string& text) {
