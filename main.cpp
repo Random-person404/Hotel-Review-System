@@ -39,9 +39,7 @@ void saveUsers(const string& filename, string userID[], string userName[],  // S
                string membership[], int points[], int userCount); // Save the users to a file
 void saveReviews(const string& filename, string userID[], int rating[], // Save the reviews to a file
                  string reviewText[], string hotelName[], int reviewCount);
-void sortUsersByPoints(string userID[], string userName[], string country[], // Sort the users by points
-                       string state[], string email[], string membership[],
-                       int points[], int userCount);
+void sortUsersByPoints(Traveler list[], int travelerCount); // Sort the users by points
 void sortHotelsByReviewCount(string hotelName[], int rating[], // Sort the hotels by review count
                               string reviewText[], string reviewUserID[],
                               int reviewCount);
@@ -226,12 +224,10 @@ int main() {
                 break;
             }
             case 11:   // Sort users by points
-                sortUsersByPoints(userID, userName, country, state, email, // Sort the users by points
-                                 membership, points, userCount);
+                sortUsersByPoints(travelers, travelerCount);
                 break; // Break out of the switch statement
             case 12:
-                sortHotelsByReviewCount(hotelName, rating, reviewText, // Sort the hotels by review count
-                                       reviewUserID, reviewCount);
+                sortHotelsByReviewCount(travelers, travelerCount); // Sort hotels by number of reviews
                 break; // Break out of the switch statement
             case 13: {
                 string keyword; // Keyword to search for
@@ -904,7 +900,13 @@ void saveReviews(const string& filename, string userID[], int rating[],     // S
 
 // Additional Features Implementation
 
-void sortUsersByPoints() {
+void sortUsersByPoints(Traveler list[], int travelerCount) {
+
+    int list[MAX_USERS];
+    for (int i = 0; i < travelerCount; i++) {
+        list[i] = i;
+    }
+
     // Bubble Sort on the object array
     for (int i = 0; i < travelerCount - 1; i++) {
         for (int j = 0; j < travelerCount - i - 1; j++) {
@@ -916,7 +918,6 @@ void sortUsersByPoints() {
                 list[j+1] = temp;
             }
         }
-    }
     }
 
     // 2. Display the sorted data
@@ -937,7 +938,7 @@ void sortUsersByPoints() {
     cout << "========================================\n";
 }
 
-void sortHotelsByReviewCount() {
+void sortHotelsByReviewCount(Traveler list[], int travelerCount) {
     // Parallel local arrays for temporary processing (No STL allowed)
     string uniqueHotels[500]; 
     int hotelReviewCounts[500] = {0};
@@ -947,7 +948,7 @@ void sortHotelsByReviewCount() {
     for (int i = 0; i < travelerCount; i++) {
         // Traveler class must provide access to its reviews via a getter or internal loop
         for (int r = 0; r < list[i].getReviewCount(); r++) {
-            string currentHotel = list[i].getReviewAt(r).getHotelName();
+            string currentHotel = list[i].getReview(r).getHotelName();
             
             bool found = false;
             for (int j = 0; j < hotelCount; j++) {
