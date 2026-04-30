@@ -107,3 +107,8 @@ void Traveler::displayAllReviews() const {
         travelerReviews[i].displayReview();
     }
 }
+
+// Returns a specific review by index, allowing external code to access individual reviews for further processing or display.
+Review Traveler::getReview(int index) const {
+    return travelerReviews[index];
+}

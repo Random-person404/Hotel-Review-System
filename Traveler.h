@@ -48,10 +48,10 @@ public:
     //Display all reviews written by the traveler.
     void displayAllReviews() const;
 
-    //Mandatory OOP Specification: Friend Function
-    //Allows an external report utility to access private members 
-    //like loyaltyPoints without breaking encapsulation.
-    friend void generateReportSummary();
+    // display a specific review by index
+    Review getReview(int index) const;
+    
+    friend void generateReportSummary(Traveler travelers[], int travelerCount);
 };
 
 #endif

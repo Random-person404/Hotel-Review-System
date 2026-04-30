@@ -3,6 +3,7 @@
 #include <fstream> // Include the fstream library for file input and output
 #include <iomanip> // Include the iomanip library for input and output manipulation
 #include <string> // Include the string library for string operations
+#include <cstdlib> // Include the cstdlib library for general purpose functions
 #include "Person.h"
 #include "Traveler.h"
 #include "Review.h"
@@ -25,8 +26,7 @@ void loadReviews(const string& filename, string userID[], int rating[],  // Load
                  string reviewText[], string hotelName[], int& reviewCount);
 void displayMenu(); // Display the menu
 int getChoice(); // Get the choice from the user
-void displaySummary(string userID[], int reviewCount, int points[],  // Display summary of activities
-                    int userCount);
+void generateReportSummary(Traveler travelers[], int travelerCount);
 void displayUsersByCategory(string userID[], string userName[],  // Display users by category
                             string membership[], int points[], int userCount);
 void displayTopReviewerLeaderboard(string userID[], string userName[],  // Display top reviewer leaderboard
@@ -70,36 +70,15 @@ string findUserIDCaseInsensitive(const string& input, string userIDList[], int u
 
 //=================Main function=================
 int main() { 
-    // Parallel arrays for users and reviews
-    Traveler travelers[MAX_USERS]; // Array of Traveler objects
-    int reviewCountsPerUser[MAX_USERS] = {0}; // Track review count per user
-    int userCount = 0;  // Count of users
-
+    // Parallel arrays for travelers
+    Traveler travelers[MAX_USERS];
     // Parallel arrays for reviews
-    string reviewUserID[MAX_REVIEWS];
-    int rating[MAX_REVIEWS];
-    string reviewText[MAX_REVIEWS];
-    string hotelName[MAX_REVIEWS];
-    int reviewCount = 0;
+    Review reviews[MAX_REVIEWS];
+    int travelerCount = 0; 
 
     // Load data from files (open once for reading)
-    loadUsers("users.txt", userID, userName, country, state, email, // Load users from the users.txt file
-              membership, points, userCount);
-    loadReviews("reviews.txt", reviewUserID, rating, reviewText, // Load reviews from the reviews.txt file
-                hotelName, reviewCount);
-
-    // Count reviews per user from loaded reviews
-    for (int i = 0; i < reviewCount; i++) {
-        for (int j = 0; j < userCount; j++) {
-            if (reviewUserID[i] == userID[j]) {
-                reviewCountsPerUser[j]++; // Increment the review count for the user
-                break;
-            }
-        }
-    }
-
-    // Update membership categories based on existing points from file
-    updateMembershipCategories(userID, userName, points, membership, userCount);
+    travelerCount = loadUsers("users.txt", travelers); // Load users from the users.txt file
+    loadReviews("reviews.txt", travelers, travelerCount); // Load reviews from the reviews.txt file
 
     int choice; // Choice from the user
     bool dataModified = false; // Flag to check if data has been modified
@@ -110,67 +89,89 @@ int main() {
 
         switch(choice) {
             case 1: {   // Display reviews by user
-                string targetUserID;
-                cout << "\nEnter User ID: "; // Prompt the user to enter a user ID
-                cin >> targetUserID;
-                cin.ignore(1000, '\n'); // Clear the input buffer
-                // Convert to correct case using the findUserIDCaseInsensitive function
-                targetUserID = findUserIDCaseInsensitive(targetUserID, userID, userCount);
-                if (validateUserID(targetUserID, userID, userCount)) { // Validate the user ID
-                    displayReviewsByUser(reviewUserID, reviewText, hotelName, // Display the reviews by user
-                                         rating, reviewCount, targetUserID);
-                } else { // If the user ID is invalid, prompt the user to enter a valid user ID
-                    cout << "Invalid User ID! Please Enter a Valid User ID.\n";
+            string targetUserID;
+            cout << "\nEnter User ID: ";
+            cin >> targetUserID;
+            cin.ignore(1000, '\n');
+
+            bool found = false;
+            for (int i = 0; i < travelerCount; i++) {
+                if (travelers[i].getUserID() == targetUserID) {
+                    travelers[i].displayAllReviews();
+                    found = true;
+                    break;
                 }
-                break; // Break out of the switch statement
             }
+            if (!found) {
+                cout << "Invalid User ID! Please Enter a Valid User ID.\n";
+            }
+            break;
+        }
             case 2: {   // Display reviews by hotel
-                string targetHotel;
-                cout << "\nEnter Hotel Name: "; // Prompt the user to enter a hotel name
-                getline(cin, targetHotel);
-                displayReviewsByHotel(reviewUserID, reviewText, hotelName, // Display the reviews by hotel
-                                     rating, userName, reviewCount, targetHotel);
-                break; // Break out of the switch statement
+    string targetHotel;
+    cout << "\nEnter Hotel Name: ";
+    getline(cin, targetHotel);
+
+    bool found = false;
+    cout << "\n========================================\n";
+    cout << "REVIEWS FOR HOTEL: " << targetHotel << "\n";
+    cout << "========================================\n";
+
+    for (int i = 0; i < travelerCount; i++) {
+        for (int j = 0; j < travelers[i].getReviewCount(); j++) {
+            Review r = travelers[i].getReview(j);
+            if (caseInsensitiveCompare(r.getHotelName(), targetHotel)) {
+                found = true;
+                cout << "\nUser: " << travelers[i].getUserName() << endl;
+                cout << "Rating: " << r.getRating() << "/5" << endl;
+                cout << "Review: " << r.getReviewText() << endl;
+                cout << "----------------------------------------\n";
             }
-            case 3: {   // Display user information
-                string targetUserID;
-                cout << "\nEnter User ID: "; // Prompt the user to enter a user ID
-                cin >> targetUserID;
-                cin.ignore(1000, '\n'); // Clear the input buffer
-                // Convert to correct case using the findUserIDCaseInsensitive function
-                targetUserID = findUserIDCaseInsensitive(targetUserID, userID, userCount);
-                if (validateUserID(targetUserID, userID, userCount)) { // Validate the user ID
-                    displayUserInfo(userID, userName, country, state, email,
-                                   membership, points, userCount, targetUserID);
-                } else { // If the user ID is invalid, prompt the user to enter a valid user ID
-                    cout << "Invalid User ID!\n";
+        }
+    }
+
+    if (!found) {
+        cout << "No reviews found for this hotel.\n";
+    }
+    break;
+}
+            case 3: {   // Display info by user
+            string targetUserID;
+            cout << "\nEnter User ID: ";
+            cin >> targetUserID;
+            cin.ignore(1000, '\n');
+
+            bool found = false;
+            for (int i = 0; i < travelerCount; i++) {
+                if (travelers[i].getUserID() == targetUserID) {
+                    travelers[i].display();
+                    found = true;
+                    break;
                 }
-                break; // Break out of the switch statement
             }
+            if (!found) {
+                cout << "Invalid User ID! Please Enter a Valid User ID.\n";
+            }
+            break;
+        }
             case 4: {   // Display positive reviews by hotel
                 string targetHotel;
                 cout << "\nEnter Hotel Name: "; // Prompt the user to enter a hotel name
                 getline(cin, targetHotel);
-                displayPositiveReviewsByHotel(reviewUserID, reviewText, // Display the positive reviews by hotel
-                                             hotelName, rating, userName,
-                                             reviewCount, targetHotel);
+                displayPositiveReviewsByHotel(targetHotel, travelers, travelerCount);
                 break; // Break out of the switch statement
             }
             case 5:   // Display summary of activities
-                displaySummary(userID, reviewCount, points, userCount);
-                break; // Break out of the switch statement
+                generateReportSummary(travelers, travelerCount);
+                break;
             case 6:
-                displayUsersByCategory(userID, userName, membership, points, // Display users by category
-                                      userCount);
+                displayUsersByCategory(travelers, travelerCount); // Display users grouped by membership category
                 break; // Break out of the switch statement
             case 7:
-                displayTopReviewerLeaderboard(userID, userName, // Display top reviewer leaderboard
-                                              reviewUserID, reviewCount,
-                                              userCount);
+                displayTopReviewerLeaderboard(travelers, travelerCount); // Display top reviewer leaderboard
                 break; // Break out of the switch statement
             case 8:
-                displayTop3Users(userID, userName, reviewUserID, reviewCount, // Display top 3 users
-                                userCount);
+                displayTop3Users(travelers, travelerCount); // Display top 3 users
                 break; // Break out of the switch statement
             case 9:
                 displayHotelRatingSummary(hotelName, rating, reviewCount); // Display hotel rating summary
@@ -237,109 +238,64 @@ int main() {
     return 0; // Return 0 to indicate successful execution
 }
 
-void loadUsers(const string& filename, string userID[], string userName[],
-               string country[], string state[], string email[],
-               string membership[], int points[], int& userCount) {
-    ifstream inFile(filename); // Open the file for reading
-    if (!inFile) {
-        cout << "Error: Cannot open " << filename << endl; // Error opening file
-        return; // Return to the calling function
+int loadUsers(const string& filename, Traveler travelers[]) {
+    ifstream infile(filename);
+    if (!infile) {
+        cout << "Error: Cannot open " << filename << endl;
+        return 0;
     }
 
-    userCount = 0; // Initialize the user count to 0
-    string line;
-    while (userCount < MAX_USERS && getline(inFile, line)) {
-        if (line.empty()) continue; // If the line is empty, continue to the next line
+    int i = 0;
+    string id, name, country, state, email, membership;
+    int points;
 
-        size_t pos = 0; // Initialize the position to 0
-        size_t nextPos = 0; // Initialize the next position to 0
+    while (i < MAX_USERS && getline(infile, id, '\t')) {
+        getline(infile, name, '\t');
+        getline(infile, country, '\t');
+        getline(infile, state, '\t');
+        getline(infile, email, '\t');
+        getline(infile, membership, '\t');
+        infile >> points;
+        infile.ignore();  // clear the \n after points
 
-        // Read User ID
-        nextPos = line.find('\t', pos);
-        if (nextPos == string::npos) break; // If the next position is not found, break the loop
-        userID[userCount] = line.substr(pos, nextPos - pos);
-        pos = nextPos + 1;
-
-        // Read User Name
-        nextPos = line.find('\t', pos);
-        if (nextPos == string::npos) break; // If the next position is not found, break the loop
-        userName[userCount] = line.substr(pos, nextPos - pos);
-        pos = nextPos + 1;
-
-        // Read Country
-        nextPos = line.find('\t', pos);
-        if (nextPos == string::npos) break; // If the next position is not found, break the loop
-        country[userCount] = line.substr(pos, nextPos - pos);
-        pos = nextPos + 1;
-
-        // Read State
-        nextPos = line.find('\t', pos);
-        if (nextPos == string::npos) break; // If the next position is not found, break the loop
-        state[userCount] = line.substr(pos, nextPos - pos);
-        pos = nextPos + 1;
-
-        // Read Email
-        nextPos = line.find('\t', pos);
-        if (nextPos == string::npos) break; // If the next position is not found, break the loop
-        email[userCount] = line.substr(pos, nextPos - pos);
-        pos = nextPos + 1;
-
-        // Read Membership
-        nextPos = line.find('\t', pos);
-        if (nextPos == string::npos) break; // If the next position is not found, break the loop
-        membership[userCount] = line.substr(pos, nextPos - pos);
-        pos = nextPos + 1;
-
-        // Read Points
-        points[userCount] = stoi(line.substr(pos)); // Convert the string to an integer
-
-        userCount++;
+        travelers[i] = Traveler(id, name, country, state,
+                                email, membership, points);
+        travelers[i].updateMembership(); // ensure correct membership on load
+        i++;
     }
 
-    inFile.close(); // Close the file
+    infile.close();
+    return i; // returns how many travelers were loaded
 }
 
-void loadReviews(const string& filename, string userID[], int rating[],
-                 string reviewText[], string hotelName[], int& reviewCount) {
-    ifstream inFile(filename); // Open the file for reading
-    if (!inFile) {
-        cout << "Error: Cannot open " << filename << endl; // Error opening file
-        return; // Return to the calling function
+// Reads reviews.txt once — assigns each review to matching Traveler
+void loadReviews(const string& filename, Traveler travelers[], int travelerCount) {
+    ifstream infile(filename);
+    if (!infile) {
+        cout << "Error: Cannot open " << filename << endl;
+        return;
     }
 
-    reviewCount = 0; // Initialize the review count to 0
+    string uid, reviewText, hotelName;
+    int rating;
     string line;
-    while (reviewCount < MAX_REVIEWS && getline(inFile, line)) {
-        if (line.empty()) continue; // If the line is empty, continue to the next line
 
-        size_t pos = 0; // Initialize the position to 0
-        size_t nextPos = 0; // Initialize the next position to 0
+    while (getline(infile, uid, '\t')) {
+        infile >> rating;
+        infile.ignore();  // clear \t after rating
+        getline(infile, reviewText, '\t');
+        getline(infile, hotelName);
 
-        // Read User ID
-        nextPos = line.find('\t', pos);
-        if (nextPos == string::npos) break; // If the next position is not found, break the loop
-        userID[reviewCount] = line.substr(pos, nextPos - pos);
-        pos = nextPos + 1;
-
-        // Read Rating
-        nextPos = line.find('\t', pos);
-        if (nextPos == string::npos) break; // If the next position is not found, break the loop
-        rating[reviewCount] = stoi(line.substr(pos, nextPos - pos));
-        pos = nextPos + 1;
-
-        // Read Review Text
-        nextPos = line.find('\t', pos);
-        if (nextPos == string::npos) break; // If the next position is not found, break the loop
-        reviewText[reviewCount] = line.substr(pos, nextPos - pos);
-        pos = nextPos + 1;
-
-        // Read Hotel Name
-        hotelName[reviewCount] = line.substr(pos);
-
-        reviewCount++;
+        // Find the matching traveler and add review to them
+        for (int i = 0; i < travelerCount; i++) {
+            if (travelers[i].getUserID() == uid) {
+                travelers[i].addReview(hotelName, rating, reviewText);
+                break;
+            }
+        }
     }
 
-    inFile.close(); // Close the file
+    infile.close();
 }
 
 void displayMenu() {   // Display the menu
@@ -460,158 +416,131 @@ void displayUserInfo(string userID[], string userName[], string country[],  // D
     }
 }
 
-void displayPositiveReviewsByHotel(string userID[], string reviewText[], // Display positive reviews by hotel
-                                   string hotelName[], int rating[],
-                                   string userName[], int reviewCount,
-                                   string targetHotel) {
-    bool found = false; // Flag to check if the hotel name is found
+void displayPositiveReviewsByHotel(string targetHotel, Traveler travelers[], int travelerCount) {
+    bool found = false;
     cout << "\n========================================\n";
-    cout << "POSITIVE REVIEWS (4-5) FOR: " << targetHotel << "\n"; // Display the positive reviews for the hotel
+    cout << "POSITIVE REVIEWS (4-5) FOR: " << targetHotel << "\n";
     cout << "========================================\n";
 
-    for (int i = 0; i < reviewCount; i++) { // Loop through the reviews
-        if (caseInsensitiveCompare(hotelName[i], targetHotel) && rating[i] >= 4) {
-            found = true;
-            cout << "\nUser ID: " << userID[i] << endl; // Display the user ID
-            cout << "Rating: " << rating[i] << "/5" << endl; // Display the rating
-            cout << "Review: " << reviewText[i] << endl; // Display the review text
-            cout << "----------------------------------------\n";
+    for (int i = 0; i < travelerCount; i++) {
+        for (int j = 0; j < travelers[i].getReviewCount(); j++) {
+            Review r = travelers[i].getReview(j);
+            if (r.getHotelName() == targetHotel && r.getRating() >= 4) {
+                found = true;
+                cout << "\nUser: " << travelers[i].getUserName() << endl;
+                cout << "Rating: " << r.getRating() << "/5" << endl;
+                cout << "Review: " << r.getReviewText() << endl;
+                cout << "----------------------------------------\n";
+            }
         }
     }
 
     if (!found) {
-        cout << "No positive reviews found for this hotel.\n"; // No positive reviews found for this hotel
+        cout << "No positive reviews found for this hotel.\n";
     }
 }
 
-void displaySummary(string userID[], int reviewCount, int points[],  // Display summary of activities
-                    int userCount) {
-    int totalPoints = 0; // Initialize the total points to 0
-    for (int i = 0; i < userCount; i++) {
-        totalPoints += points[i]; // Add the points to the total points
+// Friend function — can access private members of Traveler directly
+void generateReportSummary(Traveler travelers[], int travelerCount) {
+    int totalPoints = 0;
+    int totalReviews = 0;
+
+    for (int i = 0; i < travelerCount; i++) {
+        totalPoints += travelers[i].loyaltyPoints;   // accessing private member directly
+        totalReviews += travelers[i].reviewCount;    // accessing private member directly
     }
 
     cout << "\n========================================\n";
-    cout << "SUMMARY OF ACTIVITIES\n"; // Display the summary of activities
+    cout << "SUMMARY OF ACTIVITIES\n";
     cout << "========================================\n";
-    cout << "Total Number of Users: " << userCount << endl; // Display the total number of users
-    cout << "Total Number of Reviews: " << reviewCount << endl; // Display the total number of reviews
-    cout << "Total Points Awarded System-wide: " << totalPoints << endl; // Display the total points awarded system-wide
+    cout << "Total Number of Users:   " << travelerCount << endl;
+    cout << "Total Number of Reviews: " << totalReviews << endl;
+    cout << "Total Points Awarded:    " << totalPoints << endl;
     cout << "========================================\n";
 }
 
-void displayUsersByCategory(string userID[], string userName[],  // Display users by category
-                            string membership[], int points[], int userCount) {
-    string categories[] = {"Platinum", "Gold", "Silver", "Basic"}; // Categories of users
-    int catCount = 4; // Number of categories
+void displayUsersByCategory(Traveler travelers[], int travelerCount) {
+    string categories[] = {"Platinum", "Gold", "Silver", "Basic"};
+    int catCount = 4;
 
     cout << "\n========================================\n";
-    cout << "USERS GROUPED BY MEMBERSHIP CATEGORY\n";   // Display the users grouped by membership category
+    cout << "USERS GROUPED BY MEMBERSHIP CATEGORY\n";
     cout << "========================================\n";
 
     for (int c = 0; c < catCount; c++) {
-        cout << "\n--- " << categories[c] << " ---\n"; // Display the category
-        bool hasUsers = false; // Flag to check if there are users in the category
-        for (int i = 0; i < userCount; i++) {
-            if (membership[i] == categories[c]) {
+        cout << "\n--- " << categories[c] << " ---\n";
+        bool hasUsers = false;
+        for (int i = 0; i < travelerCount; i++) {
+            if (travelers[i].getMembershipLevel() == categories[c]) {
                 hasUsers = true;
-                cout << userID[i] << " - " << userName[i]
-                     << " (Points: " << points[i] << ")\n";
+                cout << travelers[i].getUserID() << " - "
+                     << travelers[i].getUserName()
+                     << " (Points: " << travelers[i].getLoyaltyPoints() << ")\n";
             }
         }
         if (!hasUsers) {
-            cout << "No users in this category.\n"; // No users in this category
+            cout << "No users in this category.\n";
         }
     }
     cout << "========================================\n";
 }
 
-void displayTopReviewerLeaderboard(string userID[], string userName[],  // Display top reviewer leaderboard
-                                    string reviewUserID[], int reviewCount,
-                                    int userCount) {
-    // Count reviews per user
-    int reviewCounts[MAX_USERS] = {0}; // Initialize the review counts to 0
-    for (int i = 0; i < userCount; i++) {
-        for (int j = 0; j < reviewCount; j++) {
-            if (reviewUserID[j] == userID[i]) {
-                reviewCounts[i]++;
-            }
-        }
-    }
 
-    // Create sorted arrays (simple bubble sort)
-    int sortedIndices[MAX_USERS]; // Initialize the sorted indices to 0
-    for (int i = 0; i < userCount; i++) {
+void sortIndicesByReviewCount(Traveler travelers[], int travelerCount, int sortedIndices[]) {
+    for (int i = 0; i < travelerCount; i++) {
         sortedIndices[i] = i;
     }
 
-    for (int i = 0; i < userCount - 1; i++) {
-        for (int j = 0; j < userCount - i - 1; j++) {
-            if (reviewCounts[sortedIndices[j]] < reviewCounts[sortedIndices[j+1]]) {
+    for (int i = 0; i < travelerCount - 1; i++) {
+        for (int j = 0; j < travelerCount - i - 1; j++) {
+            if (travelers[sortedIndices[j]].getReviewCount() < 
+                travelers[sortedIndices[j+1]].getReviewCount()) {
                 int temp = sortedIndices[j];
                 sortedIndices[j] = sortedIndices[j+1];
                 sortedIndices[j+1] = temp;
             }
         }
     }
+}
+
+void displayTopReviewerLeaderboard(Traveler travelers[], int travelerCount) {
+    int sortedIndices[MAX_USERS];
+    for (int i = 0; i < travelerCount; i++) {
+        sortedIndices[i] = i;
+    }
+    sortIndicesByReviewCount(travelers, travelerCount, sortedIndices);
 
     cout << "\n========================================\n";
     cout << "TOP REVIEWER LEADERBOARD\n";
     cout << "========================================\n";
-    cout << setw(5) << "Rank" << setw(10) << "User ID" << setw(25)
-         << "Name" << setw(15) << "Review Count\n";
+    cout << setw(5) << "Rank" << setw(10) << "User ID"
+         << setw(25) << "Name" << setw(15) << "Review Count\n";
     cout << "----------------------------------------\n";
 
-    for (int i = 0; i < userCount; i++) {
+    for (int i = 0; i < travelerCount; i++) {
         int idx = sortedIndices[i];
-        cout << setw(5) << (i + 1) << setw(10) << userID[idx]
-             << setw(25) << userName[idx]
-             << setw(15) << reviewCounts[idx] << endl;
+        cout << setw(5) << (i + 1)
+             << setw(10) << travelers[idx].getUserID()
+             << setw(25) << travelers[idx].getUserName()
+             << setw(15) << travelers[idx].getReviewCount() << endl;
     }
     cout << "========================================\n";
 }
 
-void displayTop3Users(string userID[], string userName[],  // Display top 3 users
-                      string reviewUserID[], int reviewCount,
-                      int userCount) {
-    // Count reviews per user
-    int reviewCounts[MAX_USERS] = {0}; // Initialize the review counts to 0
-    for (int i = 0; i < userCount; i++) {
-        for (int j = 0; j < reviewCount; j++) {
-            if (reviewUserID[j] == userID[i]) {
-                reviewCounts[i]++;
-            }
-        }
+void displayTop3Users(Traveler travelers[], int travelerCount) {
+    int sortedIndices[MAX_USERS];
+    for (int i = 0; i < travelerCount; i++) {
+        sortedIndices[i] = i;
     }
-
-    // Find top 3
-    int top3Indices[3] = {-1, -1, -1}; // Initialize the top 3 indices to -1
-    for (int rank = 0; rank < 3; rank++) {
-        int maxIdx = -1; // Initialize the max index to -1
-        int maxCount = -1; // Initialize the max count to -1
-        for (int i = 0; i < userCount; i++) {
-            bool alreadyUsed = false; // Flag to check if the user is already used
-            for (int k = 0; k < rank; k++) {
-                if (top3Indices[k] == i) {
-                    alreadyUsed = true; // Set the already used flag to true
-                    break;
-                }
-            }
-            if (!alreadyUsed && reviewCounts[i] > maxCount) { // If the review count is greater than the max count
-                maxCount = reviewCounts[i]; // Set the max count to the review count
-                maxIdx = i; // Set the max index to the index
-            }
-        }
-        top3Indices[rank] = maxIdx; // Set the top 3 indices to the max index
-    }
+    sortIndicesByReviewCount(travelers, travelerCount, sortedIndices);
 
     cout << "\n========================================\n";
     cout << "TOP 3 USERS WITH MOST REVIEWS\n";
     cout << "========================================\n";
-    for (int i = 0; i < 3 && top3Indices[i] != -1; i++) {
-        int idx = top3Indices[i];
-        cout << (i + 1) << ". " << userID[idx] << " - " << userName[idx]
-             << " (" << reviewCounts[idx] << " reviews)\n";
+    for (int i = 0; i < 3 && sortedIndices[i] != -1; i++) {
+        int idx = sortedIndices[i];
+        cout << (i + 1) << ". " << travelers[idx].getUserID() << " - " << travelers[idx].getUserName()
+             << " (" << travelers[idx].getReviewCount() << " reviews)\n";
     }
     cout << "========================================\n";
 }

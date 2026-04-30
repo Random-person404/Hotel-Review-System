@@ -53,7 +53,7 @@ bool Review::operator<(const Review& other) const {
 
 
 // Calculate number of words added in review
-int countWords(const string& text) {
+int Review::countWords(const string& text) {
     int wordCount = 0; // Initialize the word count to 0
     bool inWord = false;
     for (size_t i = 0; i < text.length(); i++) {
@@ -68,7 +68,7 @@ int countWords(const string& text) {
 }
 
 // Calculate calculate for a review
-int calculateReviewPoints(const string& reviewText) {
+int Review::calculateReviewPoints(const string& reviewText) {
     int points = BASE_POINTS; // Initialize the points to the base points
     int wordCount = countWords(reviewText); // Count the words in the review text
     if (wordCount > BONUS_WORD_THRESHOLD) {
