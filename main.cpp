@@ -864,69 +864,68 @@ void saveReviews(const string& filename, string userID[], int rating[],     // S
 
 // Additional Features Implementation
 
-void sortUsersByPoints(string userID[], string userName[], string country[],  // Sort the users by points
-                       string state[], string email[], string membership[],
-                       int points[], int userCount) {
-    // Create index array for sorting
-    int indices[MAX_USERS]; // Initialize the indices to 0
-    for (int i = 0; i < userCount; i++) {
-        indices[i] = i;
-    }
-
-    // Bubble sort by points (highest to lowest)
-    for (int i = 0; i < userCount - 1; i++) {
-        for (int j = 0; j < userCount - i - 1; j++) {
-            if (points[indices[j]] < points[indices[j+1]]) {
-                int temp = indices[j];
-                indices[j] = indices[j+1];
-                indices[j+1] = temp;
+void sortUsersByPoints() {
+    // Bubble Sort on the object array
+    for (int i = 0; i < travelerCount - 1; i++) {
+        for (int j = 0; j < travelerCount - i - 1; j++) {
+            // Compare the points of two Traveler objects
+            if (list[j].getLoyaltyPoints() < list[j+1].getLoyaltyPoints()) {
+                // Swap the entire objects
+                Traveler temp = list[j];
+                list[j] = list[j+1];
+                list[j+1] = temp;
             }
         }
     }
+    }
 
+    // 2. Display the sorted data
     cout << "\n========================================\n";
     cout << "USERS SORTED BY POINTS (Highest to Lowest)\n";
     cout << "========================================\n";
-    cout << setw(10) << "User ID" << setw(25) << "Name"
-         << setw(15) << "Membership" << setw(10) << "Points\n";
+    cout << left << setw(10) << "User ID" << setw(25) << "Name"
+         << setw(15) << "Membership" << setw(10) << "Points" << endl;
     cout << "----------------------------------------\n";
 
-    for (int i = 0; i < userCount; i++) {
-        int idx = indices[i];
-        cout << setw(10) << userID[idx] << setw(25) << userName[idx]
-             << setw(15) << membership[idx] << setw(10) << points[idx] << endl;
+    for (int i = 0; i < travelerCount; i++) {
+        // Accessing inherited and specialized attributes through member functions
+        cout << left << setw(10) << list[i].getUserID() 
+             << setw(25) << list[i].getUserName()
+             << setw(15) << list[i].getMembershipLevel() 
+             << setw(10) << list[i].getLoyaltyPoints() << endl;
     }
     cout << "========================================\n";
 }
 
-void sortHotelsByReviewCount(string hotelName[], int rating[],  // Sort the hotels by review count
-                              string reviewText[], string reviewUserID[],
-                              int reviewCount) {
-    // Get unique hotels and count reviews
-    string uniqueHotels[MAX_REVIEWS];
-    int hotelReviewCounts[MAX_REVIEWS] = {0};
+void sortHotelsByReviewCount() {
+    // Parallel local arrays for temporary processing (No STL allowed)
+    string uniqueHotels[500]; 
+    int hotelReviewCounts[500] = {0};
     int hotelCount = 0;
 
-    for (int i = 0; i < reviewCount; i++) {
-        bool found = false;
-        int hotelIdx = -1;
-        for (int j = 0; j < hotelCount; j++) {
-            if (uniqueHotels[j] == hotelName[i]) {
-                found = true;
-                hotelIdx = j;
-                break;
+    // 1. DATA EXTRACTION: Traverse the Object Hierarchy
+    for (int i = 0; i < travelerCount; i++) {
+        // Traveler class must provide access to its reviews via a getter or internal loop
+        for (int r = 0; r < list[i].getReviewCount(); r++) {
+            string currentHotel = list[i].getReviewAt(r).getHotelName();
+            
+            bool found = false;
+            for (int j = 0; j < hotelCount; j++) {
+                if (uniqueHotels[j] == currentHotel) {
+                    hotelReviewCounts[j]++;
+                    found = true;
+                    break;
+                }
             }
-        }
-        if (!found) {
-            uniqueHotels[hotelCount] = hotelName[i];
-            hotelReviewCounts[hotelCount] = 1;
-            hotelCount++;
-        } else {
-            hotelReviewCounts[hotelIdx]++;
+            if (!found && hotelCount < 500) {
+                uniqueHotels[hotelCount] = currentHotel;
+                hotelReviewCounts[hotelCount] = 1;
+                hotelCount++;
+            }
         }
     }
 
-    // Bubble sort by review count (highest to lowest)
+    // 2. BUBBLE SORT: High to Low
     for (int i = 0; i < hotelCount - 1; i++) {
         for (int j = 0; j < hotelCount - i - 1; j++) {
             if (hotelReviewCounts[j] < hotelReviewCounts[j+1]) {
@@ -934,8 +933,7 @@ void sortHotelsByReviewCount(string hotelName[], int rating[],  // Sort the hote
                 int tempCount = hotelReviewCounts[j];
                 hotelReviewCounts[j] = hotelReviewCounts[j+1];
                 hotelReviewCounts[j+1] = tempCount;
-
-                // Swap hotel names
+                // Swap names
                 string tempName = uniqueHotels[j];
                 uniqueHotels[j] = uniqueHotels[j+1];
                 uniqueHotels[j+1] = tempName;
@@ -943,17 +941,13 @@ void sortHotelsByReviewCount(string hotelName[], int rating[],  // Sort the hote
         }
     }
 
-    cout << "\n========================================\n";
-    cout << "HOTELS SORTED BY NUMBER OF REVIEWS\n";
-    cout << "========================================\n";
-    cout << setw(30) << "Hotel Name" << setw(20) << "Number of Reviews\n";
-    cout << "----------------------------------------\n";
-
+    // 3. DISPLAY RESULTS
+    cout << "\n========================================" << endl;
+    cout << left << setw(30) << "Hotel Name" << "Total Reviews" << endl;
+    cout << "----------------------------------------" << endl;
     for (int i = 0; i < hotelCount; i++) {
-        cout << setw(30) << uniqueHotels[i]
-             << setw(20) << hotelReviewCounts[i] << endl;
+        cout << left << setw(30) << uniqueHotels[i] << hotelReviewCounts[i] << endl;
     }
-    cout << "========================================\n";
 }
 
 void searchReviewsByKeyword(string reviewText[], string hotelName[],  // Search reviews by keyword
